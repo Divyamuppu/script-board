@@ -1,0 +1,13 @@
+{
+  "name": "script-board",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx --yes netlify-cli dev",
+    "link": "npx --yes netlify-cli link",
+    "deploy": "npx --yes netlify-cli deploy --build --prod"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.0"
+  }
+}

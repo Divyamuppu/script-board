@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Script board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a studio's production desk, calm, black and white, decisive
+   IDEA: a call sheet / production board pinned in the edit bay
+   PICTURE: the board itself, six stages, cards moving page → post; a status strip on top
+   COLOUR and TYPE: black on white, always, one REC red, quiet stage dots; Outfit, geometric
+   LAYOUT: modest title, tabs, status strip, tools, full-width scrolling board; deadlines list; library reader */
+:root,:root[data-theme=light],:root[data-theme=dark]{color-scheme:light;--bg:#ffffff;--panel:#ffffff;--col:#eef0fa;--ink:#0b0b0b;--mute:#5b5e73;--line:#dadded;--brand:#1e28aa;--brand2:#161e86;--rec:#d7332d;--s0:#d7332d;--s1:#f07a1a;--s2:#1e28aa;--s3:#0b0b0b;--s4:#9a9cae;--s5:#1f9d55}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Outfit,system-ui,sans-serif;overflow-x:clip}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.band{padding:clamp(22px,3.5vw,48px) max(4vw,16px) 0}
+.top{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:end;justify-content:space-between}
+h1{font-size:clamp(32px,5vw,48px);line-height:1.05;margin:0;font-weight:700;letter-spacing:-.02em}
+h1 .dot{display:inline-block;width:.22em;height:.22em;border-radius:50%;background:var(--brand);margin-left:.08em;vertical-align:.05em;animation:rec 1.6s ease-in-out infinite}
+@keyframes rec{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){h1 .dot{animation:none}}
+.sub{margin:6px 0 0;color:var(--mute)}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.btn{min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--line);background:var(--panel);font-weight:500;white-space:nowrap}
+.btn.pri{background:var(--brand);color:#fff;border-color:var(--brand)}
+.btn.pri:hover:not(:disabled){background:var(--brand2);border-color:var(--brand2)}
+.btn.sm{min-height:36px;padding:0 12px;font-size:14px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.shell{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh}
+.mainc{min-width:0}
+.side{position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--brand);color:#fff;padding:20px 12px 24px}
+.logo{display:block;width:176px;height:54px;margin:4px 0 24px 8px;background:url(atom-logo.png) -22px -34px/218px 123px no-repeat;filter:invert(1);mix-blend-mode:screen}
+.tabs{display:flex;flex-direction:column;gap:2px}
+.tab{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:8px 12px;border:0;border-left:3px solid transparent;border-radius:0 10px 10px 0;background:none;color:#fff;font:inherit;font-weight:500;text-align:left;line-height:1.3;cursor:pointer}
+.tab:hover{background:rgb(255 255 255/.1)}
+.tab[aria-selected=true]{color:var(--ink);background:#fff;border-left-color:var(--ink)}
+.tab em{flex:none;font-style:normal;font-size:13px;opacity:.85;font-variant-numeric:tabular-nums}
+.tab em.hot{opacity:1;color:#fff;background:var(--rec);border-radius:999px;padding:1px 7px}
+.sep{flex:none;height:1px;background:rgb(255 255 255/.25);margin:10px 12px}
+.strip.plus{grid-template-columns:repeat(var(--n,6),minmax(0,1fr)) 64px}
+.stadd{border:0;justify-content:center;align-items:center;font:500 28px/1 Outfit,system-ui,sans-serif;color:var(--brand);cursor:pointer}
+.stadd:hover{background:var(--col)}
+.strip{display:grid;grid-template-columns:repeat(var(--n,6),minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-top:16px}
+.st{background:var(--panel);padding:14px 16px 12px;display:flex;flex-direction:column;gap:2px}
+.st b{font-size:clamp(26px,3.6vw,40px);line-height:1;font-weight:600;font-variant-numeric:tabular-nums}
+.st span{font-size:13px;color:var(--mute);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.st i,.ch i{width:8px;height:8px;border-radius:50%;flex:none;background:var(--c)}
+.bar{display:flex;height:6px;margin-top:10px;border-radius:6px;overflow:hidden;background:var(--col)}
+.bar div{background:var(--c);transition:width .4s}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;align-items:center}
+.tools input[type=search],.srch{flex:1 1 220px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--panel);padding:0 18px;font-size:16px;width:100%}
+.tools select{min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--panel);padding:0 14px;font-size:16px}
+.chip{min-height:44px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:transparent;font-size:15px;white-space:nowrap}
+.chip[aria-pressed=true]{background:var(--brand);color:#fff;border-color:var(--brand)}
+.note{margin:14px 0 0;padding:10px 16px;border-radius:12px;background:var(--col);font-size:14px;color:var(--mute);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.note.alert{color:var(--ink)}
+.note.alert b{color:var(--rec)}
+.note button{border:0;background:none;text-decoration:underline;padding:6px 0;min-height:32px;color:var(--ink)}
+.note:empty{display:none}
+.board{display:grid;grid-auto-flow:column;grid-template-columns:repeat(var(--n,6),minmax(264px,1fr)) 56px;gap:12px;overflow-x:auto;padding:20px max(4vw,16px) 48px;scroll-snap-type:x proximity;scroll-padding-inline:max(4vw,16px);align-items:start}
+.col{background:var(--col);border-radius:16px;padding:12px;scroll-snap-align:start;min-height:220px;outline:2px dashed transparent;outline-offset:-2px}
+.col.over{outline-color:var(--c)}
+.ch{display:flex;align-items:center;gap:8px;padding:4px 4px 12px;font-weight:600}
+.addst{align-self:start;min-height:56px;border:1px dashed var(--line);border-radius:16px;background:none;color:var(--mute);font:500 26px/1 Outfit,system-ui,sans-serif;cursor:pointer}
+.addst:hover{color:var(--brand);border-color:var(--brand)}
+.ch .xst{border:0;background:none;color:var(--mute);font-size:16px;padding:0 4px;min-height:28px;cursor:pointer}
+.ch em{margin-left:auto;font-style:normal;color:var(--mute);font-weight:500;font-variant-numeric:tabular-nums}
+.cards{display:flex;flex-direction:column;gap:10px}
+.card{background:var(--panel);border:1px solid var(--line);box-shadow:0 1px 2px rgb(0 0 0/.04);border-radius:12px;padding:12px 14px 8px;cursor:pointer}
+.card:hover{border-color:var(--mute)}
+.card.drag{opacity:.4}
+.row{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--mute);flex-wrap:wrap}
+.tag{border:1px solid var(--line);border-radius:6px;padding:1px 6px;white-space:nowrap}
+.card h3{font-size:17px;line-height:1.3;margin:8px 0 10px;font-weight:600;text-wrap:pretty}
+.who{color:var(--ink);font-weight:500}
+.late{color:var(--rec);font-weight:600}
+.tk{margin-top:8px;font-size:13px;color:var(--mute);display:flex;gap:6px;flex-wrap:wrap}
+.cf{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);margin-top:10px;padding-top:4px}
+.cf button{border:0;background:none;min-width:44px;min-height:40px;border-radius:8px;font-size:18px;color:var(--mute)}
+.cf button:hover:not(:disabled){background:var(--col);color:var(--ink)}
+.cf button:disabled{opacity:.25;cursor:default}
+.cf a{font-size:13px;color:var(--ink);text-underline-offset:3px;padding:10px 4px}
+.empty{font-size:14px;color:var(--mute);padding:18px 6px;text-align:center;border:1px dashed var(--line);border-radius:12px}
+.view{padding:20px max(4vw,16px) 56px;max-width:1240px}
+.qadd{display:grid;grid-template-columns:2fr 1.4fr 1fr 150px auto;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px}
+.qadd input,.qadd select,.trow input,.trow select{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:0 10px;font-size:16px;width:100%}
+.grp{margin-top:26px}
+.grp h2{font-size:20px;margin:0 0 10px;display:flex;align-items:center;gap:10px}
+.grp h2 em{font-style:normal;font-size:14px;color:var(--mute);font-weight:500}
+.grp.od h2{color:var(--rec)}
+.tl2{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel)}
+.tl2 li{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:8px 14px 8px 4px;border-top:1px solid var(--line)}
+.tl2 li:first-child{border-top:0}
+.tl2 li.done .tt{text-decoration:line-through;color:var(--mute)}
+.ck{width:44px;height:44px;display:grid;place-items:center}
+.ck input{width:20px;height:20px;accent-color:var(--brand)}
+.tt{font-weight:500}
+.tm{font-size:13px;color:var(--mute);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tm button.lnk{border:0;background:none;padding:0;color:var(--mute);text-decoration:underline;text-underline-offset:3px;font-size:13px}
+.ta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.sent{font-size:13px;color:var(--s4)}
+.lib{display:grid;grid-template-columns:minmax(260px,360px) minmax(0,1fr);gap:16px;align-items:start}
+.ll{display:flex;flex-direction:column;gap:8px;position:sticky;top:12px;max-height:calc(100dvh - 24px);overflow:auto}
+.li{flex:none;border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:10px 14px;text-align:left;min-height:44px}
+.li[aria-current=true]{border-color:var(--brand);box-shadow:inset 3px 0 0 var(--brand)}
+.li b{display:block;font-weight:600;line-height:1.3}
+.li span{font-size:13px;color:var(--mute)}
+.reader{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:clamp(18px,3vw,36px)}
+.reader h2{font-size:clamp(26px,3.4vw,36px);line-height:1.1;margin:0 0 8px;text-wrap:balance}
+.reader .rbtns{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 20px}
+.reader .txt{white-space:pre-wrap;font-size:17px;line-height:1.65;max-width:68ch}
+.reader .nn{margin-top:20px;padding:12px 16px;background:var(--col);border-radius:12px;font-size:15px;color:var(--mute)}
+.scrim{position:fixed;inset:0;background:rgb(0 0 0/.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
+.scrim.on{display:flex}
+.sheet{background:var(--panel);border-radius:20px;width:min(620px,100%);max-height:calc(100dvh - 32px);overflow:auto;padding:22px clamp(16px,4vw,28px)}
+.sheet h2{margin:0 0 14px;font-size:24px;line-height:1.1}
+.sheet h3{font-size:16px;margin:18px 0 8px}
+.f{display:grid;gap:6px;margin-bottom:14px}
+.f label,.lbl{font-size:13px;color:var(--mute)}
+.f input,.f select,.f textarea{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:10px 12px;font-size:16px;width:100%}
+.f textarea{min-height:90px;resize:vertical}
+.f textarea.scr{min-height:220px;font-size:15px;line-height:1.55}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.sbtns{display:flex;flex-wrap:wrap;gap:6px}
+.sbtns .chip{display:flex;align-items:center;gap:6px;min-height:40px}
+.sbtns .chip i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.etl{display:grid;gap:8px;margin-bottom:8px}
+.trow{display:grid;grid-template-columns:28px minmax(0,1fr) minmax(0,1fr) 36px;gap:6px;align-items:center}
+.trow input[type=checkbox]{width:20px;height:20px;min-height:0;accent-color:var(--brand)}
+.trow .x{border:0;background:none;color:var(--mute);font-size:18px;min-height:40px}
+.foot{display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-top:6px}
+.foot .r{display:flex;gap:8px}
+.del{border:0;background:none;color:var(--rec);min-height:44px;padding:0 4px}
+.meta{font-size:13px;color:var(--mute);margin:-4px 0 12px}
+.mrow{display:grid;grid-template-columns:1.2fr 1fr 1.4fr 40px;gap:6px;margin-bottom:6px}
+.mrow input{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:0 10px;font-size:16px;width:100%}
+.mrow button{border:0;background:none;color:var(--mute);font-size:18px}
+.drow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr) 40px;gap:6px;margin-bottom:6px}
+.drow input{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:0 10px;font-size:16px;width:100%}
+.drow button{border:0;background:none;color:var(--mute);font-size:18px}
+.mhead{display:grid;grid-template-columns:1.2fr 1fr 1.4fr 40px;gap:6px;font-size:13px;color:var(--mute);margin-bottom:4px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;font-size:15px;max-width:min(560px,calc(100% - 32px));z-index:20;box-shadow:0 8px 30px rgb(0 0 0/.25)}
+.toast:empty{display:none}
+@media(max-width:800px){.shell{grid-template-columns:1fr;min-height:0}.side{position:static;height:auto;padding:12px max(4vw,16px) 0}.logo{width:118px;height:36px;margin:0 0 6px;background-position:-14px -23px;background-size:145px 82px}.tabs{flex-direction:row;overflow-x:auto;gap:4px}.tab{flex:none;white-space:nowrap;border-left:0;border-radius:0;border-bottom:2px solid transparent;margin-bottom:-1px;background:none}.tab:hover{background:none}.tab[aria-selected=true]{background:none;color:#fff;border-bottom-color:#fff}.tab em{margin-left:6px}.sep{width:1px;height:auto;margin:12px 6px}.lib{grid-template-columns:1fr}.ll{position:static;max-height:none}.qadd{grid-template-columns:1fr 1fr}.qadd input:first-child{grid-column:1/-1}}
+@media(max-width:700px){.strip,.strip.plus{grid-template-columns:repeat(3,minmax(0,1fr))}.board{grid-template-columns:repeat(var(--n,6),82%) 56px;scroll-snap-type:x mandatory}.two{grid-template-columns:1fr}.tl2 li{grid-template-columns:44px minmax(0,1fr)}.ta{grid-column:2;justify-content:flex-start}.trow{grid-template-columns:28px minmax(0,1fr) 36px}.trow select,.trow input[type=date]{grid-column:2}.mrow,.mhead{grid-template-columns:1fr 1fr 40px}.mrow input:nth-child(3){grid-column:1/3}.mhead span:nth-child(3){display:none}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="side"><span class="logo" role="img" aria-label="a-tom"></span><nav class="tabs" id="tabs" role="tablist" aria-label="Views" aria-orientation="vertical"></nav></aside>
+<div class="mainc">
+<header class="band">
+  <div class="top">
+    <div>
+      <h1>Script board<span class="dot" aria-hidden="true"></span></h1>
+      <p class="sub">Every script, page to post. Assign it, set the deadline, push it forward.</p>
+    </div>
+    <div class="acts">
+      <span id="who" hidden style="display:flex;gap:8px;align-items:center;font-size:14px;color:var(--mute)"><span id="whoN"></span><button class="btn sm" id="outBtn" type="button">Sign out</button></span>
+      <button class="btn" id="teamBtn" type="button">Team</button>
+      <button class="btn pri" id="addBtn" type="button">+ New script</button>
+    </div>
+  </div>
+  <div id="boardHead">
+    <div class="strip" id="strip" aria-label="Scripts by stage"></div>
+    <div class="bar" id="bar"></div>
+    <div class="tools">
+      <input type="search" id="q" placeholder="Search scripts, notes, people" aria-label="Search">
+      <select id="ownF" aria-label="Filter by person"></select>
+      <button class="chip" id="lateF" type="button" aria-pressed="false">Overdue</button>
+    </div>
+  </div>
+  <div class="note" id="note" role="status"></div>
+</header>
+<div id="gate" hidden role="dialog" aria-modal="true" aria-labelledby="gT" style="position:fixed;inset:0;z-index:60;background:var(--bg);display:grid;place-items:center;padding:24px">
+  <div style="display:grid;gap:14px;justify-items:center;text-align:center;max-width:380px">
+    <h1 id="gT">Script board<span class="dot" aria-hidden="true"></span></h1>
+    <p class="sub" id="gDom" style="margin:0">Sign in with Google to open the board.</p>
+    <div id="gBtn" style="min-height:44px"></div>
+    <p id="gErr" role="alert" style="margin:0;color:var(--rec);font-size:14px"></p>
+  </div>
+</div>
+<main class="board" id="board" aria-label="Board"></main>
+<section class="view" id="tasksV" hidden aria-label="Deadlines"></section>
+<section class="view" id="libV" hidden aria-label="Library"></section>
+</div>
+</div>
+
+<div class="scrim" id="ed" role="dialog" aria-modal="true" aria-labelledby="edT">
+  <form class="sheet" id="edF">
+    <h2 id="edT">New script</h2>
+    <p class="meta" id="edMeta"></p>
+    <div class="f"><label for="fTitle">Title / hook</label><input id="fTitle" required maxlength="200" placeholder="What's the piece called?"></div>
+    <div class="f"><span class="lbl">Stage</span><div class="sbtns" id="fStage" role="group" aria-label="Stage"></div></div>
+    <div class="two">
+      <div class="f"><label for="fTab">Tab</label><select id="fTab"></select></div>
+      <div class="f"><label for="fFmt">Format</label><select id="fFmt"></select></div>
+      <div class="f"><label for="fOwn">POC (point of contact)</label><select id="fOwn"></select></div>
+      <div class="f"><label for="fLink">Script link</label><input id="fLink" type="text" inputmode="url" placeholder="https://docs.google.com/…"></div>
+      <div class="f"><label for="fShoot">Shoot date</label><input id="fShoot" type="date"></div>
+    </div>
+    <h3>Tasks &amp; deadlines</h3>
+    <div class="etl" id="fTasks"></div>
+    <div class="trow" id="fNewTask">
+      <span></span>
+      <select id="ntWho" aria-label="Assign to"></select>
+      <input id="ntDue" type="date" aria-label="Deadline">
+      <button type="button" class="x" id="ntAdd" aria-label="Add task">+</button>
+    </div>
+    <h3>Drive links</h3>
+    <div id="fDrive"></div>
+    <button type="button" class="btn sm" id="fDriveAdd">+ Add Drive link</button>
+    <input id="fDue" type="hidden">
+    <div class="f" style="margin-top:14px"><label for="fScript">Script / copy</label><textarea id="fScript" class="scr" maxlength="40000" placeholder="Paste the script here"></textarea></div>
+    <div class="f"><label for="fNotes">Notes for the team</label><textarea id="fNotes" maxlength="4000" placeholder="Location, props, edit references…"></textarea></div>
+    <div class="foot">
+      <button type="button" class="del" id="fDel">Delete</button>
+      <span class="meta" id="fRO" style="margin:0" hidden>View only. Ask Apoorv for edit access to save.</span>
+      <div class="r"><label id="fMailL" style="display:none;gap:6px;align-items:center;font-size:13px;color:var(--mute);min-height:44px"><input type="checkbox" id="fMail" checked> Email people I tag</label><button type="button" class="btn" id="fCancel">Cancel</button><button type="submit" class="btn pri" id="fSave">Save</button></div>
+    </div>
+  </form>
+</div>
+
+<div class="scrim" id="tm" role="dialog" aria-modal="true" aria-labelledby="tmT">
+  <div class="sheet">
+    <h2 id="tmT">Team</h2>
+    <p class="meta">Everyone you delegate to. Add an email to notify them when they're tagged.</p>
+    <div class="mhead"><span>Name</span><span>Role</span><span>Email</span><span></span></div>
+    <div id="tmL"></div>
+    <form class="mrow" id="tmF">
+      <input id="tmName" maxlength="60" placeholder="Name" aria-label="Name" required>
+      <input id="tmRole" maxlength="40" placeholder="Role" aria-label="Role" list="roles">
+      <input id="tmMail" type="email" maxlength="120" placeholder="Email" aria-label="Email">
+      <button type="submit" aria-label="Add person" class="btn pri sm" style="padding:0">+</button>
+    </form>
+    <datalist id="roles"><option>Founder's office</option><option>Writer</option><option>Director</option><option>DOP</option><option>Editor</option><option>Designer</option><option>Social</option></datalist>
+    <div class="foot"><span class="meta" style="margin:0">Changes also save as you type.</span><div class="r"><button type="button" class="btn" id="tmX">Close</button><button type="button" class="btn pri" id="tmSave">Save</button></div></div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+{
+const TABS=[["perf","Performance videos","performance"],["pbv","Apoorv's PB videos","pb-videos"],["pbc","Apoorv's PB carousels","pb-carousels"],["li","LinkedIn content","linkedin"],["yt","YouTube videos","youtube"]];
+const VIEWS=[["tasks","Deadlines","deadlines"],["lib","Library","library"]];
+const VID=["Drafting","Scripted","To shoot","Shot","In edit","Posted"],CAR=["Drafting","Copy ready","To design","Designed","Revisions","Posted"];
+const SK=["draft","script","shoot","shot","edit","live"];
+const FORMATS=["Talking head","B-roll + VO","Reel","Carousel","Text post","Long-form"];
+const CAL="Google Calendar";
+const okDrive=a=>(Array.isArray(a)?a:[]).filter(d=>d&&/^https:\/\//.test(d.url||""));
+const okLink=l=>/^https:\/\//.test(l||"")||/^[\w%.\- ]+\.pdf(#page=\d+)?$/i.test(l||"");
+const SEED=[{"title":"Events attention / Cricket league","tab":"perf","stage":"draft","format":"","owner":"Srestha Roy","link":"Content%20Apoorv-c631437e.pdf#page=2","shootDate":"","dueDate":"","notes":"To be shot.","script":"HOOK - We got one account 23.8 million organic views in just 30 days, without spending a single rupee on boosting.\n(beat)\nIt was Karimnagar Diamonds, a new team in the TG20 league. Their page had maybe 21 thousand followers. Nobody really knew them.\nSo the first thing we did was figure out who they are. Gave them a voice. Made a mascot, which, funnily, no other team in the league had. Even wrote them a Telugu anthem, and the fans picked up the hook and it kind of became the team's sign-off.\n[B-ROLL: mascot, anthem reel, fans singing]\nAnd on match days we basically had a whole team at the ground. Shooters, editors, writers.\nSomething happens on the field, it's cut and posted within minutes.\nWe'd planned like 140 pieces for the month. Ended up doing 418. There was one week where we put out 186.\n(glance off-camera, then back)\nBut honestly, it's not really about speed. It's about knowing what people actually want to watch.\nThese guys love Telugu cinema, they love memes. So we just talked to them like that. One post, \"Absolute Cinema\", did 1.5 million views. On a page with 21K followers.\nAnd it wasn't a one-off thing. 23 posts crossed a lakh.\n[B-ROLL: \"Absolute Cinema\" post, crowd-night reel, hoardings, the bus creative]\n[ON SCREEN: 23.8M views · 30 days · ₹0 boosting · 23 posts 100K+]\nMost of the people watching didn't even follow the page. They were just finding it.\n(stop, look at camera)\nThat's what we do for events, showcases, films.\nCrores go into making them happen, and almost nothing into making sure people see them.\nWe take care of the second part.\n[END CARD: a-tom. logo · atominirl.netlify.app]","tasks":[],"createdAt":1795132800000,"updatedAt":1795593540000,"by":""},{"title":"Regional IPs","tab":"perf","stage":"draft","format":"","owner":"Srestha Roy","link":"Content%20Apoorv-c631437e.pdf#page=3","shootDate":"","dueDate":"","notes":"To be shot.","script":"(walking, easy pace)\nSo a masala brand made a love story.\nAnd 16.7 million people watched it.\n(beat)\nIt's a Telugu show we made for Aashirvaad. Koncham Karam, Koncham Prema. A little spice, a little love.\nA husband, a wife, their kitchen. A trailer and six episodes. And every single one crossed 5 lakh views.\n[B-ROLL: Sukhanya and Rajesh scenes, kitchen moments]\nBut honestly, the views aren't the part that got me.\nIt's that people kept coming back. Episode after episode. They started knowing the couple, following them.\nThe page grew 44% while the show was on air. Almost two thousand of those follows came straight from the episodes.\n[ON SCREEN: 16.7M views · 7/7 videos past 5 lakh · +44% followers]\nAnd nobody felt like they were being sold something. The masala was just... part of the story.\nEvery fight, every making up, it all happened around food.\n(glance off-camera, then back)\nIt makes me really proud. Because this is the thing I keep coming back to.\nI don't think the future is one more general show made for everyone. It's stuff that feels like home. Telugu dialogue, Telugu jokes, a kitchen that looks like your amma's kitchen.\nHyper-local. Regional IPs, as social shows.\nAnd we're building more of them. Season 2 of this one is already in the works.\n(stop walking, face camera)\nSo yeah. If you think your brand deserves a show... and I really think it does...\nlet's talk.","tasks":[],"createdAt":1795132800000,"updatedAt":1795593480000,"by":""},{"title":"ChatGPT ads","tab":"perf","stage":"draft","format":"","owner":"","link":"","shootDate":"","dueDate":"","notes":"","script":"","tasks":[],"createdAt":1795132800000,"updatedAt":1795593420000,"by":""},{"title":"11 times. That's what it takes.","tab":"perf","stage":"script","format":"Talking head","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=1","shootDate":"","dueDate":"","notes":"To be shot.","script":"11 times. That's what it takes.\nyour customer is going to ignore you at least 10 times before they buy from you.\nlet me explain.\nI bought NeoSapien recently. it solves a real problem I have as a founder.\nbut I didn't buy it the first time I saw it.\nI saw a reel. then [a creator talking about it]. then [a review].\nonly after all of that did I buy it.\nand that's normal.\non average, a customer needs to see a brand 11 times before they buy.\n11 times.\nnot the same ad 11 times. they need something different every time. a reel, a creator, a review. A mix of fictional and non-fictional content at different touch points.\nso judging one video by how many sales it brought in doesn't make sense.\nthat's the wrong metric.\nno single video made me buy NeoSapien. all of them together did.\nnow multiply that by every customer you want.\nthat's a lot of content. every single month.\nmeta already finds your customers for you. targeting, budgets, bidding. it's all automated now.\nwhat it can't do is build the right creative for you.\nevery performance agency we work with tells us the same thing. Creative Content is the only differentiating factor now.\nso the problem isn't reaching people anymore.\nit's having enough good content to show up at least 11 times without sounding like an ad.\nso track your content properly. look at what all of it is doing together, not one video at a time.\nand make enough of it. Volume with the right content engine is what is going to make you win.\nCaption:\nmeta can find your customer now. You just have to find your creative taste.","tasks":[],"createdAt":1795132800000,"updatedAt":1795593360000,"by":""},{"title":"Instagram update","tab":"perf","stage":"script","format":"Talking head","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=8","shootDate":"","dueDate":"","notes":"Already shot, yet to be edited.","script":"Something interesting has changed with Instagram, and I think brands really need to pay attention to this.\nInstagram is highlighting three things that matter a lot when it comes to how your content gets distributed.\nHow many people like your content, how many people share it with someone else, and how long people actually spend watching it.\nAnd there's an interesting distinction here.\nShares matter a lot when Instagram is showing your content to people who don't follow you.\nLikes matter more when it comes to people who already follow you.\nAnd watch time tells the platform whether your content is actually holding people's attention.\nNow, think about what this means for brands.\nYou can't just keep putting out content for the sake of posting. And you can't expect a media budget to compensate for content that people don't really want to watch.\nYou need more good content. More stories. More ideas. More reasons for people to stop, watch and share.\nAnd you need to do it consistently.\nAnd this is something we're seeing in our work at a-tom. More than 50% of the content we're producing for brands every month is organically outperforming, which is exactly why we're so focused on building content engines that deliver both quality and volume.\nBecause I genuinely think we're moving towards a place where the brands that can consistently produce good content, at a good volume, are going to have a massive advantage.\nAnd that's something brands need to start building for.\nNot just bigger media budgets. Better content engines.","tasks":[],"createdAt":1795132800000,"updatedAt":1795593300000,"by":""},{"title":"Real estate marketing (Sattva kidnapping film)","tab":"perf","stage":"script","format":"Talking head","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=9","shootDate":"","dueDate":"","notes":"Already shot, yet to be edited.","script":"Hook\nOur best real estate ad this year shows the property for two seconds.\nThe rest of it is a kidnapping.\nBody\nWe made three films for Sattva’s project in Hyderabad. That one did 60X+ in property sales value against what the campaign cost. Millions of views across platforms. Multicrore sales in a month.\nIf you’re marketing a real estate brand, I think you might be looking at this backwards.\nYou’re happy to pump more and more money behind performance. Because it’s measurable.\nYou can see the leads, the CPL, the dashboard going up. It feels safe.\nBut how much are you actually putting into making the creative better?\nMeta’s targeting is mostly automated now. The algorithm is doing most of it on its own. It will find your buyer. What it can’t do is make that buyer care about you.\nThat part is still on you.\nAnd data won’t help you there. Neither your property features. Because everyone else is also saying the same thing.\nAnd Data tells you what happened. It can’t tell you what’s going to happen.\nWhat improves your odds is the content people actually want to watch. Make them laugh.\nMove them. Give them a reason to stay till the end.\nBecause more money behind a video nobody wants to watch doesn’t fix the video.\nFix the video. You’ll even probably end up spending less.","tasks":[],"createdAt":1795132800000,"updatedAt":1795593240000,"by":""},{"title":"Branded vertical series","tab":"perf","stage":"script","format":"Talking head","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=10","shootDate":"","dueDate":"","notes":"Change the hook. Give me another version. Yet to be edited.","script":"So we just crossed 160 million impressions for one brand from just 40 pieces of content. All organic.\nAnd honestly, that number alone should make anyone rethink putting more money into making another typical TVC.\nBecause what we did instead was build a series. Proper stories with characters, and cliffhangers at the end of every episode so you want to see what happens next.\nIndia's already watching something like 60 minutes of microdrama a day. People are clearly\nhooked on stories that keep going.\nAnd the more I think about it, nobody remembers a product feature. Nobody. But everybody remembers a story & character they've been following for weeks.\nAnd the platform knows this. Instagram is rewarding episodic content right now, because it wants people coming back, and a series is the easiest way to make that happen.\nThat's what we do now. We're making branded vertical series, proper episodic shows, for some of the biggest brands in the country. And they keep coming back to us for season two, season three & so on…\nAnd for people like us, this is honestly ikigai. We're storytellers at heart. The industry's just catching up to what that's actually worth.\nSo I think you'll see a lot less of that paid influencer post that's only there to sell you something. Nobody wants to watch that anymore.\nBranded vertical series are the future of advertising.\nGood times are finally here.","tasks":[],"createdAt":1795132800000,"updatedAt":1795593180000,"by":""},{"title":"Virality: no formula, but a method","tab":"perf","stage":"script","format":"Talking head","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=11","shootDate":"","dueDate":"","notes":"Shot, yet to be edited.","script":"\"we need viral videos.\" - Every other week, someone sends us a two-line brief which says they need to go viral.\nLike it's a setting or a switch you can turn on.\nAnd I get it. Everyone wants to go viral.\nBut if there was a formula for virality, everybody would use it. Everything would go viral. And if everything's viral… then what even is viral?\n(beat, shrug)\nThere's no formula.\n(slow down)\nBut there is a method.\nIf you're honest with the craft, you can make sure your content reaches the right people, for the right reasons. You can't guarantee a hit. What you can do is keep improving your chances.\nAnd that only happens when you're actually tracking your creative properly. That's how you figure out what works for your audience and what doesn't.\n(glance off-camera, then back)\nThat's how we measure every piece of content at a-tom. Hook rate. Hold rate. Did people stop scrolling, and did they stay?\nAnd that's how we hold a standard of a 50%+ win rate across every account we work on.\nWhich means .. More than half the content we put out every month performs organically.\nThat doesn't happen by luck. It comes from years of doing this, getting things wrong, and studying patterns. What works on social, for which community, for which audience.\nEvery piece that goes out carries all of that. It's how we've been building millions in reach for brands, across platforms.\n(stop walking, face camera)\nSo no, I can't promise you viral.\nBut I can promise you won't be guessing anymore..","tasks":[],"createdAt":1795132800000,"updatedAt":1795593120000,"by":""},{"title":"Launch videos (Pluto)","tab":"perf","stage":"script","format":"Talking head","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=12","shootDate":"","dueDate":"","notes":"Shot, yet to be edited.","script":"A founder came to us recently wanting a video for his investors.\nIt ended up becoming his brand's hero film.\n(beat)\nThe brand's called Pluto. They're building a really cool vehicle for delivery partners. And he didn't want to walk investors through another deck. He wanted one video that explains everything. The brand, the product, the vision, why the market needs it, how big it can get, where it's going.\nSo that's what we made.\nAnd once it was done, it was obvious this wasn't just an investor video. It was the brand.\nThat same film became the face of Pluto.\nAnd we're seeing this a lot right now. We're making so many launch videos for startups that have just raised.\nWhich makes sense. The moment you get funded, the first thing you want is for people to know you exist.\nAnd you can see it happening everywhere. A new brand comes out, and instead of announcing it with a nice photo and a caption, they put out a two-minute film. Why this brand should exist. What it’s here to do. All in one go.\nAnd everyone’s talking about it.\nAnd I think the team has gotten really good at this. Taking everything a founder has in their head and fitting it into one video that launches the brand and explains the product at the same time.\nBecause a video is the easiest way to make something stick.\nPeople remember the proposition. They remember what makes you different. They remember the feeling.\nNobody remembers a slide.\nPeople remember visuals. Moving visuals.\nAnd honestly, that's making the deck feel a bit outdated.\n(stop walking, face camera)\nPluto's just one example. There are a lot more.\nSo if you've just raised, the deck got you the money.\nThe video is what people will remember you by.","tasks":[],"createdAt":1795132800000,"updatedAt":1795593060000,"by":""},{"title":"Films are dead? Advertising films are dead?","tab":"perf","stage":"script","format":"Talking head","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=32","shootDate":"","dueDate":"","notes":"","script":"Films are dead. Advertising firms are dead.But are they?\nHook- advertising films are dead.\nPeople keep telling me this that top of funnel is dead. that nobody has the patience for watching a 60 second ad anymore.\nThen explain this to me (Show me on set).\nExplain flipkart to me. — b roll of flipkart ads\nExplain why they're spending crores every single big billion days season on films with actual actors, actual writers, Script, actual production value.\nif it didn't work. why would they keep doing it.\ni think we've confused two different jobs here .\nperformance is supposed to convert. awareness is supposed to make people give a shit in the first place.\nyou can't keep pumping mediocre creative into meta and wonder why your roas is not great.\nbecause you are never building a reason for anyone to want you in the first place. –showing ads done by atom or showing appreciations on content..\nand no,\ni'm not saying throw money in making another typical TVC film with zero strategy, zero direction– Because festive season's coming. and every other agency is about to pitch you the same - \"this diwali, bring home happiness.\"\n\"this diwali, gift more.\"\nnone of that is going to work. None of that is going to move a single person because people have seen it enough.\nWhat actually might work instead is- pick a fresh insight nobody else picked. exaggerate it.\nhave fun with it. give people something that surprises them . – ad films done by atom People love surprises.\nAwareness is the only reason performance performs in the first place.","tasks":[],"createdAt":1795132800000,"updatedAt":1795593000000,"by":""},{"title":"Performance marketing agencies (another version)","tab":"perf","stage":"shoot","format":"Talking head","owner":"Aishwarya Velluri","link":"Content%20Apoorv-c631437e.pdf#page=4","shootDate":"","dueDate":"","notes":"To be shot.","script":"Something's been bugging me for a while. Let me just say it.\nPerformance marketing agencies — I think they broke something in this industry. Not on purpose. But they did.\nThey made everyone believe data can tell you what to make next. What idea will work. And what won’t.\nAnd somewhere in that, original thinking just... took a backseat.\nBut it's never actually worked that way.\nI was listening to Strauss Zelnick — CEO of Take-Two, the guys behind GTA (who made our childhood) — talk about this. And he said something that stuck with me.\nHe said datasets are backward looking. Creativity is forward looking.\nBasically — data can only tell you what already happened. Not what's coming.\nAnd he said something else. Clones don't sell.\nYou could technically clone GTA with old tech, way before AI existed. Nobody did it. Because a clone was never going to be GTA.\nSo this whole idea that if you just feed enough data into a machine, or into a strategy deck, you'll land the next big thing — I don't buy it.\nNever has worked. Probably never will.\nI think the real unlock isn't data. And it isn't creativity floating around with no direction either.\nIt's both, combined together. Data telling you what's real. Creativity telling you what's next.\nThat's it.","tasks":[{"id":"t1perf","text":"Schedule and shoot","who":"Aishwarya Velluri","due":"","done":false,"createdAt":1795478400000}],"createdAt":1795132800000,"updatedAt":1795592940000,"by":""},{"title":"Data says this","tab":"perf","stage":"shot","format":"Talking head","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=5","shootDate":"","dueDate":"","notes":"Done.","script":"performance marketing agencies have been lying to you.\nhook in 3 seconds. keep it under 30. data says this, data saya that. And you’ve been listening to them.\nSee, data can predict. But it can't guarantee.\ndata can only tell you what already happened. Not what's supposed to happen.\nwe recently made a 3-minute film for a hospital brand's breast cancer awareness campaign.\nIt doesn’t have a hook. no fast cuts. just a good story told in a fresh, honest & novel way.\nit didn't just travel india. it reached pan asia. organically.\nwithout putting a single penny in boosting it.\n& 30 million+ reach. within days of launch. That’s the power of organic content.\nSo here's my request to brands. stop building a fence around yourself with performance marketing rules. Just focus on telling the story in a fresher , better & honest way.\nIt’ll work.","tasks":[],"createdAt":1795132800000,"updatedAt":1795592880000,"by":""},{"title":"High quality, less volume","tab":"pbv","stage":"shot","format":"","owner":"","link":"","shootDate":"","dueDate":"","notes":"","script":"","tasks":[],"createdAt":1795132800000,"updatedAt":1795592820000,"by":""},{"title":"Cognitive: on-set BTS (B-rolls + VO)","tab":"pbv","stage":"shot","format":"B-roll + VO","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=15","shootDate":"","dueDate":"","notes":"Done.","script":"Ohhhh ,...this one's been a lot, man.\nso many calls with the writers. so many late nights.\n[on set]\nand then the shoot. directing a five-year-old. not easy. but can't complain. it's been the most fulfilling part of all this.\ni think i feel most alive when i'm on set. that's what makes me happiest.\n[long day, wrap moments]\nback to back days. damn exhausted. but weirdly, not tired.\njust fulfilled. happy.\nif you've ever gotten to make something like this, you know that feeling.\nif you're an artist, you'll understand.\n[crew, monitor, hq]\nlast time we did something like this was a healthcare film. we'd like to believe it made some difference.\nand now we get to do it again.\nso grateful for this team.\n[beat]\ncoming soon.","tasks":[],"createdAt":1795132800000,"updatedAt":1795592760000,"by":""},{"title":"atom Originals, version 2 (160M impressions)","tab":"pbv","stage":"shot","format":"Talking head","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=21","shootDate":"","dueDate":"","notes":"Shoot done on 26 Sept.","script":"160 million plus impressions. for one brand. from just 40 pieces of content and all organic.\nhonestly, that number alone should make anyone rethink putting more money into another typical TVC.\nbecause what we did instead was build a series. Episodic content with characters, a storyline that moves forward with little cliffhangers.\nAnd if you really think about it, people don't come back for content anymore. they come back for continuity.\nSee, nobody remembers a product feature, but everybody remembers a character they've been following for weeks.\nand the platform knows this. instagram is literally rewarding episodic content right now, because it wants people coming back, and a series is the easiest way to make that happen.\nthat's not a guess, This is literally happening.\nThat is why the brands keep coming back to us for season after season of such social shows. and honestly, this is ikigai for people like us. we're storytellers at heart. the industry's just catching up to what that's actually worth.\nfinally, good times are here. and we'll be seeing less of the surface, transactional, influencer paid collaboration just selling something. Nobody wants to see that anymore..","tasks":[],"createdAt":1795132800000,"updatedAt":1795592700000,"by":""},{"title":"Labelled as \"AI content\"","tab":"pbv","stage":"shot","format":"Talking head","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=30","shootDate":"","dueDate":"","notes":"Shoot done on 26 Sept.","script":"Something really interesting is happening on Instagram right now.\nI noticed this very recently with a few pieces of content we were putting out for brands.\nEverything was shot properly.\nActual set. Actual actors. Actual production. Actual money spent. Script, shoot, edit — the whole thing.\nAnd then the client sends us a screenshot:\n“Why is this marked as AI content?”\nWe were like… what?\nSo I went back to the post-production team.\nTurns out, the thumbnail we used was generated through ChatGPT.\nJust the thumbnail.\nNothing else in the video.\nBut Instagram labelled the entire thing as AI content.\nAnd that got me thinking.\nBecause the interesting part isn't the technology.\nIt's the perception the label creates.\nThink about fashion.\nIf I tell you something is handmade, you immediately attach a certain value to it.\nIf I tell you it was mass-produced, you perceive it differently.\nSame product.\nDifferent perception.\nAnd I think AI could head in the same direction.\nWhat happens when people start seeing that label and automatically thinking:\n“Okay, this was easy.”\n“Not much effort went into this.”\n“Maybe it's not original.”\nEven when that's completely untrue.\nI don't know exactly where this is headed.\nBut I do know one thing:\nThe more accessible the tools become, the more valuable the thinking behind the work becomes.\nAI can make making things easier.\nBut the idea, the taste, the story, the point of view—\nthat's still what makes something worth watching.","tasks":[],"createdAt":1795132800000,"updatedAt":1795592640000,"by":""},{"title":"Let it breathe","tab":"pbv","stage":"shot","format":"Talking head","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=35","shootDate":"","dueDate":"","notes":"Shoot done on 26 Sept.","script":"I think brands are killing their own organic content.\nAnd I see this happening all the time.\nA piece of content goes live…\nand before it even gets a chance to breathe,\nThey booooost it.\nAnd of course, the numbers go up.\nBut that doesn't tell you if the content actually worked.\nAnd then comes the other question that I really don't understand:\n“How do we make this go viral?”\nBut if you're trying too hard to make something viral,\nand you're also trying to make it sell something…\nit usually doesn’t.\nBecause, People can smell that from a mile away.\nIf you want organic content to work,\nit has to actually feel organic.\nTell a good story.\nPut the product in naturally.\nGive people something they actually want to watch or share.\nAnd then… let it breathe.\nBecause Instagram started as a place where you shared things with people.\nThen creators came in.\nThen brands came in.\nAnd today, sometimes it feels like everything is trying to sell you something.\nAnd I think the platform knows that too.\nBecause if people stop enjoying the platform,\nthey eventually stop using it.\nSo I think we're going to see platforms lean more into what made them work in the first place — organic content, storytelling, creators, things people actually want to consume.\nAnd brands need to keep up with that shift.\nBecause you can't keep treating every piece of content like an ad.\nMake something people want to see first.\nThen let the money amplify it.\nThat, to me, is where brand content is headed.","tasks":[],"createdAt":1795132800000,"updatedAt":1795592580000,"by":""},{"title":"atom Originals, version 1","tab":"pbv","stage":"edit","format":"Talking head","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=20","shootDate":"","dueDate":"","notes":"In edit.","script":"I think we're massively underestimating what's happening on Instagram right now.\nAnd it's not a new feature. It's not another algorithm update.\nIt's a behaviour shift.\nCreators are already figuring this out. One repeatable premise can outperform a hundred unrelated videos.\nAnd if you really think about it, people don't come back for content anymore. They come back for “continuity.”\nThey're waiting for the next guest. The next episode. The next joke. The next outrageous thing that happens. They're invested.\nThat's why Instagram is pushing the series. The platform wants people to come back. And the easiest way to make someone come back is to give them a reason to.\nI don't think brands are taking this seriously enough yet.\nThey’re still asking, \"can you give us the content calender?\"\nThe better question is, \"Why should someone come back tomorrow?\"\nThere's a big difference.\nI genuinely believe every brand's Instagram page will eventually start looking like its own OTT platform.\nCharacters. Formats. Stories. Universes.\nWe're moving from content consumption to content anticipation.\nAnd that's a much bigger shift than people realise.\nWe've been quietly betting on this for a while now. Building episodic content and micro-fictions for brands because we've always believed people remember stories far longer than they remember ads or product features (Nobody remembers that).\n125M+ Views\n85M Estimated Reach\n165M Estimated Impressions","tasks":[],"createdAt":1795132800000,"updatedAt":1795592520000,"by":""},{"title":"Lessons I learned","tab":"pbc","stage":"script","format":"Carousel","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=37","shootDate":"","dueDate":"","notes":"","script":"Lessons I learned.\nSlide 1 (cover)\nLessons i learned\nwhile building one of the fastest growing content studios in the country\nSlide 2\ngood work alone doesn't get you clients.\nit's not enough. you have to keep showing up in the room.\nSlide 3\nsomeone has to watch the P&L and the cash flow.\nit's not the fun part. it's the part that keeps the lights on.\nSlide 4\nsales is the fundamental.\nproduct or service, doesn't matter. i had to convince myself of this.\nSlide 5\nthere's no ROI for a founder.\nyou keep investing in people. some leave, some stay. you can't expect the return.\nSlide 6\nfiring is as important as hiring.\nmaybe more. i kept pushing, thinking people will get better. some won't, because they don't want to. and that's okay.\nSlide 7\nyou can't be an empty vessel.\npeople look to you for energy, and unintentionally, for validation. you have to be full of life yourself.\nSlide 8\nchoose your battles.\ni wanted everything perfect. it almost burned me out. the guilt, the doubt, \"is it even worth scaling?\"\nSlide 9\npay yourself well.\n60 people, everyone else comes first, because you're nice and the company is your baby. after a while you start to shrink.\nSlide 10\nblame yourself.\nyou started this. you chose this. it's not always healthy, but it's the right mindset, because you can fix it. set the right system, or let the person go.\nSlide 11\nif i could go back, would i change anything?\nMaybe NOT.","tasks":[],"createdAt":1795132800000,"updatedAt":1795592460000,"by":""},{"title":"The right culture: new meaning (Bhutan)","tab":"pbc","stage":"shoot","format":"Carousel","owner":"Aishwarya Velluri","link":"Content%20Apoorv-c631437e.pdf#page=6","shootDate":"","dueDate":"2026-11-25","notes":"Get this carousel ready today. Two options for slide 3.","script":"slide 1 (bhutan, thumbnail)\njust 5 days in this country showed me what's wrong with my company.\nslide 2 (work / office)\nfor the longest time, culture to me meant fun. flexible. casual. no rigid rules, nobody breathing down your neck. that was freedom. that's what i thought a good place to work felt like.\nslide 3 (bhutan)\nOn the other hand, talking about this country, Bhutan, it is not loose about anything. who gets to come in, how buildings look, what people wear to work, how traditions are kept. there are rules for all of it. and they don't bend them to make anyone comfortable.\nOR\nslide 3 (bhutan)\nspending just a few days in this country forced me to look at that differently. you can’t be here and not notice it. the way the buildings look, what people wear, how old traditions are still very much alive. there are strict rules behind all of it, and nobody really complains or seems to be having a problem with them.\nslide 4 (bhutan)\nyou'd expect people to resent that. they don't. they're proud of it. it feels like the things they care about, their values, their way of life, are being protected. not policed. protected.\nslide 5 (bhutan)\nand what comes back is something you rarely see anywhere. people genuinely revere their king. not out of fear. it's respect, built over years of someone guarding what matters to them.\nslide 6 (bhutan)\ni kept thinking about how easy it would've been to loosen up. make it more convenient, more relaxed, more open. and how quickly they'd lose the very thing that makes this place what it is.\nslide 7 (bhutan)\nthat's when it clicked for me. culture was never about how chill a place feels. it's about what you're not willing to let slide.\nslide 8 (on set)\nsomewhere along the way, i mixed up flexibility with freedom. and freedom with not holding the line.\nslide 9 (work / team)\nso a few things are going to change. more standards. fewer exceptions. less being okay with \"good enough.\"\nslide 10 (bhutan, closer)\nit's going to be uncomfortable for a bit. me included.\npretty sure that's the point.","tasks":[{"id":"t1bhutan","text":"Get the carousel designed (pick slide 3 option)","who":"Aishwarya Velluri","due":"2026-11-25","done":false,"createdAt":1795478400000}],"createdAt":1795132800000,"updatedAt":1795592400000,"by":""},{"title":"4 years into the business","tab":"pbc","stage":"shot","format":"Carousel","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=16","shootDate":"","dueDate":"","notes":"Done. Revised copy on top, old version below.","script":"Revised copy\nSlide1:\n4 years into the business.\nWe’re in boardrooms with names we used to only read about. Here’s how.\nSlide 2\nWe had no business being there.\nNo industry experience.\nNo veterans on the team.\nNo connections.\nSlide 3\nOur unfair advantage?\nWe do extra. We always have.\nSlide 4\nIt’s not “ideal.”\nBut nothing ideal ever made something worth remembering.\nNot because a client pushed.\nNot because we had no choice.\nWe just genuinely love doing it.\nSlide 5\nPeople call it professionalism.\nI don’t think it’s that.\nIt’s happiness. It’s obsession.\nIt’s loving what we get to do, every single day.\nSlide 6\nTalent, skill, taste, voice all matter.\nThey make you stand out.\nBut the little extra, every time, no matter what?\nThat’s what stuck. It kept adding up.\nSlide 7\nAnd somewhere in there, it gave us courage.\nTo walk in and say, “Yes, I can be in this room.”\nNobody’s going to stop me.\nSlide 8 (closer)\nSo yeah, we do extra.\nThat’s our unfair advantage.\nThat’s my unfair advantage.\nBecause I know most of them won’t.\nOld version\nSlide 1 (hook)\n4 years into the business.\nOne question I keep getting asked:\n“How did you get into the rooms you’re in?”\nSlide 2\nHonestly?\nWe had no business being there.\nSlide 3\nNo prior experience in the industry.\nNo veterans on the team.\nNo connections when we started.\nNothing that should’ve gotten us in.\nSlide 4\nSo how did we?\nSlide 5\nI think it’s our unfair advantage.\nWe do extra.\nWe always have.\nSlide 6\nIt’s not “ideal.”\nBut nothing ideal ever made something worth remembering.\nSlide 7\nNot because a client pushed.\nNot because we had no choice.\nWe just genuinely love doing it.\nSlide 8\nPeople call it professionalism.\nI don’t think it’s that.\nSlide 9\nI think it’s happiness.\nIt’s obsession.\nIt’s loving what we get to do, every single day.\nSlide 10\nAnd yeah, talent, skill, taste, voice all matter.\nThey make you stand out.\nBut the little extra, every time, no matter what?\nThat’s what stuck.\nIt kept adding up.\nSlide 11\nSomewhere in there, it also gave us courage.\nTo walk in and say,\n“Yes, I can be in this room.”\nAnd nobody’s going to stop me.\nSlide 12 (closer)\nSo yeah, we do extra.\nThat’s our unfair advantage.\nThat’s my unfair advantage.\nBecause I know most of them won’t.","tasks":[],"createdAt":1795132800000,"updatedAt":1795592340000,"by":""},{"title":"Where else would you find somebody like us?","tab":"li","stage":"draft","format":"Text post","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=24","shootDate":"","dueDate":"","notes":"","script":"Where else would you find somebody like us ?\nIt's very rare to find a creative outfit that can do this and this as well under one roof and that is why what we are building is different.\nMost brands work with separate partners for creative, production, social and performance.\nBut when these functions don't speak to each other, even a great idea can lose its impact along the way.\na-tom. Started to solve one fundamental problem, we weren’t an agency. We weren’t a production house. We were an amalgamation of both and along the road we realized a few things\n● It's rare to find a creative outfit that can conceptualise an advertising film, produce it entirely in-house, build a social strategy around it, create performance assets and develop original shows for the same brand.\n● Usually, brands work with one agency for strategy, another for production, another for social and someone else for performance.\n● The problem isn't necessarily having multiple partners. It's that the original creative vision can get diluted every time it passes from one team to another.\n● At a-tom., we're building an ecosystem where the people coming up with the idea also understand how it will be produced, distributed, adapted and scaled.\n● We can pitch a three-minute film and simultaneously think about its performance cutdowns, social extensions, creator-led content and even whether the underlying idea has the potential to become a recurring IP.\n● And because we understand production ourselves, we know the difference between an ambitious idea and an idea that is actually executable.\n● It's not about offering 10 different services. It's about those 10 services making each other stronger.","tasks":[],"createdAt":1795132800000,"updatedAt":1795592280000,"by":""},{"title":"A celebrity can get you reach, not results","tab":"li","stage":"draft","format":"Text post","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=25","shootDate":"","dueDate":"","notes":"","script":"We are very selective about the celebrity campaigns we do because, at the end of the day, for good content to be nurtured and to be out there in its original form, it doesn't need many of the obstacles that come with the entourage of the celebrity.\nThe celebrity should be a natural fit for the idea. Then, for the idea, it could make sense just for the sake of using a celebrity face so that you can have the distribution and reach, but that reach would be just like almost doing nothing for you.\nTalking points from S -\nA celebrity can get you reach. That does not mean they’ll get you\nresults.\nWe’re very selective about celebrity campaigns because a famous face cannot rescue a weak idea.\nBrands often look at a celebrity’s following and think: distribution solved. But if the celebrity has no natural connection to the idea, you’ve essentially paid a premium for impressions.\nFrom a performance perspective, what matters is what happens after someone sees the ad. Do they stop? Do they remember the brand? Do they click? Do they consider? Do they convert?\nSometimes the best-performing celebrity campaign is the one where you forget you’re watching a celebrity campaign because the person feels completely native to the idea.\nAnd that’s why we never start with the celebrity. We start with the idea they can actually make stronger.","tasks":[],"createdAt":1795132800000,"updatedAt":1795592220000,"by":""},{"title":"Number of deliverables: frequency vs consistency","tab":"li","stage":"draft","format":"Text post","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=26","shootDate":"","dueDate":"","notes":"","script":"Sticking to your content calendar just to fulfill your grid is not fulfilling you with revenue. You know why? Because you are focused on frequency. Frequency is not the key. Consistency is, but the definition of consistency is not just posting as per the content calendar.\nConsistency today means whenever you are posting, you are saying something that is hammering the very thing that you stand for. That could be once a week, once a month, or every day.\n—---\nBrands are obsessed with deliverables. Twelve reels, eight statics, four carousels.\nEverything needs to go live according to the calendar.\nBut what happens when all 24 pieces are saying completely different things? You're showing up consistently, but what is your audience actually remembering about you?\nFrequency is important, especially when it comes to distribution. But posting frequently and building a consistent brand narrative are not interchangeable.\nConsistency isn't posting every Tuesday. It's repeatedly reinforcing what you want people to associate with your brand.\nThat doesn't mean repeating the same creative. The insight, format, humour or storytelling can change, but the larger brand thought should remain recognisable.\nThink about recurring characters, social shows and established content properties. Every episode might tell a different story, but it contributes to building the same world and strengthening familiarity.\nPosting 30 times a month might fulfil your contractual deliverables. But if the communication is disconnected, you're investing in output without necessarily building cumulative brand value.","tasks":[],"createdAt":1795132800000,"updatedAt":1795592160000,"by":""},{"title":"AI slop: distinctiveness is the advantage","tab":"li","stage":"draft","format":"Text post","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=22","shootDate":"","dueDate":"","notes":"","script":"Context -\nMediocre content is almost free. People can literally make templates of ads and sell them to the brands and everything, but at the end of the day, it would be just another mediocre piece of content because there is nothing original about it.\n- Talking points from S\nMaking content has never been cheaper. Making content people care about hasn’t become any easier.\nAI has drastically lowered the cost of execution.\nToday you can generate a script, visual, edit, voiceover and ten adaptations before lunch.\nWhich is amazing.\nBut there’s another side to that: the internet is now filling up with completely forgettable content.\nAnd When everyone can produce more, volume stops being an advantage.\nDistinctiveness becomes the advantage.\nThe brands that win aren’t going to be the ones generating 500 pieces of content. They’ll be the ones using AI to execute faster while still having an original insight, a recognizable voice and creative people making decisions.","tasks":[],"createdAt":1795132800000,"updatedAt":1795592100000,"by":""},{"title":"First generation entrepreneurship (\"Chaadar\")","tab":"li","stage":"draft","format":"Text post","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=27","shootDate":"","dueDate":"","notes":"","script":"First Generation Entrepreneurship:\nI think first-generation entrepreneurship takes much more than it gives back to you.\nBecause a lot of your time goes by in figuring out How to break out of that middle-class mindset bubble?\nA lot of people have a fence that they are not even aware of. And they did not draw that fence. That fence has passed on to them. We call it “Chaadar”.\nIt's not fair that it's comparatively harder for first-generation entrepreneurs, especially the ones without having any mentor. I'm not complaining. It's an observation. I chose this.\nNobody asked me to do this. Nobody forced me to do this. I did not have to please anybody to do this. I wasn't going to disappoint anybody if I don't do this, so yeah, I don't get to complain.\nBut it's definitely much, much harder for the ones who do not come from any business background I believe.","tasks":[],"createdAt":1795132800000,"updatedAt":1795592040000,"by":""},{"title":"Everyone wants to do creative. Nobody wants to sell it.","tab":"li","stage":"script","format":"Text post","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=28","shootDate":"","dueDate":"","notes":"","script":"everyone wants to do creative.\nnobody wants to sell it.\nbecause everyone thinks they're creative. it's subjective, right. anyone can have an opinion.\nselling is the hard part. that's the bit nobody wants to touch.\nbut that's literally where the value is.\nif you have an idea, and you actually believe in it. enough conviction to walk up to someone and go \"buy this from me.\"\nthat's the real skill.\nand once you get good at that, there's no going back.\nyou stop making excuses about why you \"don't do sales.\"\nbecause if you want to grow as a creative, you can't avoid it. simple as that.","tasks":[],"createdAt":1795132800000,"updatedAt":1795591980000,"by":""},{"title":"We won another gold (Sattva Zero Waste)","tab":"li","stage":"script","format":"Text post","owner":"","link":"Content%20Apoorv-c631437e.pdf#page=34","shootDate":"","dueDate":"","notes":"","script":"We won another gold.\nBut I actually want to talk about something else.\nEveryone in this industry talks about relationships, but let's be honest about what most of those relationships look like. It's \"here's the budget, here's the deliverables, we need this posted across a hundred pages, get us three influencers, wrap it by end of month.\" that's it.\nthat's not a relationship. That's a transaction.\nand transactions don't leave an impact. They might leave you a good CTR if you're lucky.\nbut when there's actual trust in a relationship, something changes. you get room. room to experiment. room to push back, sit with something, try a version nobody asked for. That only happens when someone trusts you, not when someone's just paying you.\nand that room is where the real work comes from. with this client, we've had that room for three years now.\nand the result of that is we're able to produce campaigns that leave an impact that's more than just a marketing initiative. they mean something larger. they're impacting real lives. in this one, some real fishermen on the coastline of Karnataka. That's not the media plan working. That's the relationship working.\nNow I don't say this to sound like we're above the industry or something. We've done all sorts of work ourselves too. but i've noticed the work that actually goes somewhere, that actually moves something, never comes from a transactional mode.\nThis was just one example, one client. but it's proof this still works. that it's still possible.\neven when most of the industry's gone gaga on influencer collaborations.","tasks":[],"createdAt":1795132800000,"updatedAt":1795591920000,"by":""}];
+const SEED_TEAM=[{"name":"Aishwarya Velluri","role":"","email":""},{"name":"Srestha Roy","role":"","email":""},{"name":"Nikhil","role":"","email":""}];
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const col=i=>`var(--s${i})`;
+let extra={};
+const stagesFor=t=>[...SK.slice(0,5),...(extra[t]||[]).map(x=>x.k),"live"];
+const labelsFor=t=>{const L=labels(t);return[...L.slice(0,5),...(extra[t]||[]).map(x=>x.label),L[5]]};
+const colK=k=>SK.includes(k)?col(SK.indexOf(k)):"var(--ink)";
+const taskLbl=t=>t.text||"Deadline";
+const labels=t=>t==="pbc"?CAR:VID;
+const tabName=k=>(TABS.find(t=>t[0]===k)||TABS[0])[1];
+const stageName=s=>labelsFor(s.tab||"perf")[stagesFor(s.tab||"perf").indexOf(s.stage)]||"";
+const iso=d=>{d=new Date(d);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
+const today=()=>iso(new Date());
+const addDays=n=>{const d=new Date();d.setDate(d.getDate()+n);return iso(d)};
+const fmtD=s=>{if(!s)return"";const d=new Date(s+"T00:00");return isNaN(d)?"":d.toLocaleDateString("en-GB",{day:"numeric",month:"short"})};
+const relD=s=>{if(!s)return"No date";const t=today();if(s===t)return"Today";if(s===addDays(1))return"Tomorrow";if(s===addDays(-1))return"Yesterday";return fmtD(s)};
+const ago=t=>{if(!t)return"";const m=Math.round((Date.now()-t)/6e4);if(m<1)return"just now";if(m<60)return m+"m ago";const h=Math.round(m/60);if(h<24)return h+"h ago";return Math.round(h/24)+"d ago"};
+const uid=()=>Math.random().toString(36).slice(2,10);
+const first=n=>String(n||"").split(" ")[0];
+let view=([...TABS,...VIEWS].find(t=>"#"+t[2]===location.hash)||TABS[0])[0];
+const TK="scriptboard.session";
+let meName="";
+let db=null,mcp=null,user=null,me=null,canWrite=true,loaded=false,local=false,seeded=false,teamSeeded=false,all=[],team=[],editing=null,draftStage="draft",draftTasks=[],armed=null;
+let libSel=null,libTab="",libQ="",tFilt={who:"",done:false};
+const filt={q:"",owner:"",late:false};
+const keyDate=s=>(s.stage==="draft"||s.stage==="script")?s.shootDate:s.dueDate;
+const isLate=s=>s.stage!=="live"&&keyDate(s)&&keyDate(s)<today();
+const openTasks=()=>all.flatMap(s=>(s.tasks||[]).filter(t=>!t.done).map(t=>({...t,sid:s.id,stitle:s.title})));
+const member=n=>team.find(m=>m.name===n);
+const names=()=>[...new Set([...team.map(m=>m.name),...all.map(s=>s.owner),...all.flatMap(s=>(s.tasks||[]).map(t=>t.who))].filter(Boolean))];
+const opts=(sel,none)=>`<option value="">${none}</option>`+names().map(n=>`<option value="${esc(n)}"${n===sel?" selected":""}>@${esc(n)}</option>`).join("");
+let toastT;function toast(m){$("#toast").textContent=m;clearTimeout(toastT);toastT=setTimeout(()=>$("#toast").textContent="",5200)}
+
+/* ---------- render ---------- */
+function render(){
+  const od=openTasks().filter(t=>t.due&&t.due<today()).length;
+  $("#tabs").innerHTML=TABS.map(([k,l])=>`<button class="tab" role="tab" type="button" data-t="${k}" aria-selected="${k===view}">${l}<em>${all.filter(s=>(s.tab||"perf")===k).length}</em></button>`).join("")+`<span class="sep"></span>`+
+    `<button class="tab" role="tab" type="button" data-t="tasks" aria-selected="${view==="tasks"}">Deadlines<em class="${od?"hot":""}">${od||openTasks().length}</em></button>`+
+    `<button class="tab" role="tab" type="button" data-t="lib" aria-selected="${view==="lib"}">Library<em>${all.filter(s=>s.script).length}</em></button>`;
+  const isBoard=!!TABS.find(t=>t[0]===view);
+  $("#boardHead").hidden=!isBoard;$("#board").hidden=!isBoard;$("#tasksV").hidden=view!=="tasks";$("#libV").hidden=view!=="lib";
+  status();
+  if(isBoard)renderBoard();else if(view==="tasks")renderTasks();else renderLib();
+}
+function status(){
+  if(!db){note(loaded?"Sign in to claude.ai to see the board.":"Connecting to the board…");return}
+  if(!canWrite){note("You can view this board. Ask Apoorv for edit access to move cards.");return}
+  const ot=openTasks(),od=ot.filter(t=>t.due&&t.due<today()).length,dt=ot.filter(t=>t.due===today()).length;
+  if((od||dt)&&view!=="tasks"){note(`${od?`<b>${od} task${od>1?"s":""} overdue</b>`:""}${od&&dt?" · ":""}${dt?`${dt} due today`:""} <button type="button" id="goTasks">Open deadlines</button>`,true);return}
+  note(local?"Saved in this browser only. Open the board in claude.ai to share changes with the team.":"");
+}
+function note(html,alert){const n=$("#note");n.innerHTML=html;n.classList.toggle("alert",!!alert)}
+
+function renderBoard(){
+  const tab=view,L=labelsFor(tab),ST=stagesFor(tab),scripts=all.filter(s=>(s.tab||"perf")===tab),tot=scripts.length||1;
+  $("#strip").style.setProperty("--n",ST.length);$("#board").style.setProperty("--n",ST.length);
+  $("#strip").innerHTML=ST.map((k,i)=>`<div class="st" style="--c:${colK(k)}"><b>${scripts.filter(s=>s.stage===k).length}</b><span><i></i>${esc(L[i])}</span></div>`).join("");
+  $("#bar").innerHTML=ST.map((k,i)=>`<div style="--c:${colK(k)};width:${scripts.filter(s=>s.stage===k).length/tot*100}%"></div>`).join("");
+  const q=filt.q.toLowerCase();
+  const vis=scripts.filter(s=>(!q||[s.title,s.notes,s.owner,s.format,s.script,...(s.tasks||[]).map(t=>t.text+" "+t.who)].join(" ").toLowerCase().includes(q))&&(!filt.owner||(filt.owner==="_none"?!s.owner:s.owner===filt.owner||(s.tasks||[]).some(t=>!t.done&&t.who===filt.owner)))&&(!filt.late||isLate(s)||(s.tasks||[]).some(t=>!t.done&&t.due&&t.due<today())));
+  if(!$("#strip").dataset.w){$("#strip").dataset.w=1;$("#strip").addEventListener("click",e=>{if(e.target.closest("[data-addst]"))addStage()})}
+  $("#board").innerHTML=ST.map((k,i)=>{
+    const cs=vis.filter(s=>s.stage===k).sort((a,b)=>(keyDate(a)||"9").localeCompare(keyDate(b)||"9")||(b.updatedAt||0)-(a.updatedAt||0));
+    return `<section class="col" data-stage="${k}" style="--c:${colK(k)}" aria-label="${L[i]}"><div class="ch"><i></i>${esc(L[i])}<em>${cs.length}</em>${canWrite&&!SK.includes(k)&&!scripts.some(s=>s.stage===k)?`<button type="button" class="xst" data-xst="${k}" aria-label="Remove stage ${esc(L[i])}">×</button>`:""}</div><div class="cards">${cs.map(s=>card(s,i,ST.length-1)).join("")||`<div class="empty">${loaded?"Nothing here":"Loading…"}</div>`}</div></section>`;
+  }).join("")+(canWrite?`<button type="button" class="addst" id="addSt" aria-label="Add a stage" title="Add a stage">+</button>`:"");
+}
+function card(s,i,last){
+  const d=keyDate(s),late=isLate(s),lbl=(s.stage==="draft"||s.stage==="script")?"Shoot":"Post";
+  const ot=(s.tasks||[]).filter(t=>!t.done).sort((a,b)=>(a.due||"9").localeCompare(b.due||"9"));
+  const nx=ot[0],nlate=nx&&nx.due&&nx.due<today();
+  const dr=okDrive(s.drive);
+  const link=`<span style="display:flex;gap:12px">${okLink(s.link)?`<a href="${esc(s.link)}" target="_blank" rel="noopener">Doc ↗</a>`:""}${dr.length?`<a href="${esc(dr[0].url)}" target="_blank" rel="noopener" title="${esc(dr.map(d=>d.label||d.url).join("\n"))}">Drive${dr.length>1?" ("+dr.length+")":""} ↗</a>`:""}</span>`;
+  return `<article class="card" draggable="${canWrite}" data-id="${esc(s.id)}" tabindex="0">
+  <div class="row">${s.format?`<span class="tag">${esc(s.format)}</span>`:""}${s.script?`<span>Script in</span>`:""}</div>
+  <h3>${esc(s.title||"Untitled")}</h3>
+  <div class="row"><span class="who">${s.owner?"@"+esc(s.owner):"Unassigned"}</span>${d?`<span class="${late?"late":""}">· ${lbl} ${esc(fmtD(d))}${late?" · late":""}</span>`:""}</div>
+  ${nx?`<div class="tk"><span class="${nlate?"late":""}">${ot.length} task${ot.length>1?"s":""} · next${nx.text?": "+esc(nx.text):""}${nx.who?" @"+esc(first(nx.who)):""}${nx.due?" · "+esc(relD(nx.due)):""}</span></div>`:""}
+  <div class="cf"><button type="button" data-mv="-1" aria-label="Move back" ${!canWrite||i===0?"disabled":""}>←</button>${link}<button type="button" data-mv="1" aria-label="Move forward" ${!canWrite||i===last?"disabled":""}>→</button></div>
+</article>`;
+}
+
+/* ---------- deadlines ---------- */
+function renderTasks(){
+  const keep=["qText","qScript","qWho","qDue"].map(id=>document.getElementById(id)?.value),hadFocus=document.activeElement?.id;
+  const rows=all.flatMap(s=>(s.tasks||[]).map(t=>({...t,sid:s.id,stitle:s.title,stab:s.tab}))).filter(t=>(tFilt.done||!t.done)&&(!tFilt.who||t.who===tFilt.who));
+  const t0=today(),wk=addDays(7);
+  const G=[["Overdue",t=>!t.done&&t.due&&t.due<t0,"od"],["Today",t=>!t.done&&t.due===t0],["Next 7 days",t=>!t.done&&t.due>t0&&t.due<=wk],["Later",t=>!t.done&&t.due>wk],["No deadline",t=>!t.done&&!t.due],["Done",t=>t.done]];
+  const people=names();
+  const sel=tFilt.who,m=member(sel);
+  let h=canWrite?`<form class="qadd" id="qadd"><input id="qText" placeholder="New task, e.g. Shoot the Bhutan carousel B-roll" maxlength="200" required aria-label="Task">
+   <select id="qScript" aria-label="Script" required><option value="">Which script?</option>${TABS.map(([k,l])=>`<optgroup label="${esc(l)}">${all.filter(s=>(s.tab||"perf")===k).map(s=>`<option value="${esc(s.id)}">${esc(s.title)}</option>`).join("")}</optgroup>`).join("")}</select>
+   <select id="qWho" aria-label="Assign to">${opts(sel,"Assign to…")}</select><input id="qDue" type="date" aria-label="Deadline" value="${addDays(1)}"><button class="btn pri" type="submit">Add task</button></form>`:"";
+  h+=`<div class="tools" style="margin-top:16px"><div class="row" role="group" aria-label="Person" style="gap:6px">${["",...people].map(n=>`<button class="chip" type="button" data-who="${esc(n)}" aria-pressed="${n===sel}">${n?"@"+esc(n):"Everyone"}</button>`).join("")}</div>
+   <button class="chip" type="button" id="showDone" aria-pressed="${tFilt.done}">Show done</button>
+   ${sel?`<button class="btn sm" type="button" id="copyMsg">Copy reminder for ${esc(first(sel))}</button>${mcp&&m?.email?`<button class="btn sm" type="button" id="calAll">Send calendar reminders to ${esc(first(sel))}</button>`:""}`:""}</div>`;
+  for(const [g,fn,cls] of G){
+    const list=rows.filter(fn).sort((a,b)=>(a.due||"9").localeCompare(b.due||"9"));
+    if(!list.length||(g==="Done"&&!tFilt.done))continue;
+    h+=`<div class="grp ${cls||""}"><h2>${g}<em>${list.length}</em></h2><ul class="tl2">${list.map(taskRow).join("")}</ul></div>`;
+  }
+  if(!rows.length)h+=`<div class="empty" style="margin-top:24px">${sel?`Nothing open for @${esc(sel)}.`:"No tasks yet. Add one above, or open any script and add tasks with deadlines."}</div>`;
+  $("#tasksV").innerHTML=h;
+  if(keep[0]!==undefined)["qText","qScript","qWho","qDue"].forEach((id,i)=>{const el=document.getElementById(id);if(el&&keep[i]!==undefined&&(id!=="qWho"||keep[i]))el.value=keep[i]});
+  if(hadFocus&&document.getElementById(hadFocus)&&hadFocus.startsWith("q"))document.getElementById(hadFocus).focus();
+}
+function taskRow(t){
+  const m=member(t.who),late=!t.done&&t.due&&t.due<today();
+  const remind=t.done?"":t.remindedAt?`<span class="sent">Invite sent ${esc(ago(t.remindedAt))}</span>`:(mcp&&m?.email&&t.due&&canWrite?`<button class="btn sm" type="button" data-cal="${esc(t.sid)}|${esc(t.id)}">Calendar reminder</button>`:"");
+  return `<li class="${t.done?"done":""}"><label class="ck"><input type="checkbox" data-tick="${esc(t.sid)}|${esc(t.id)}" ${t.done?"checked":""} ${canWrite?"":"disabled"} aria-label="Mark done"></label>
+  <div><div class="tt">${esc(t.text||t.stitle)}</div><div class="tm"><button type="button" class="lnk" data-open="${esc(t.sid)}">${esc(t.stitle)}</button><span>· ${esc(tabName(t.stab))}</span></div></div>
+  <div class="ta"><span class="who">${t.who?"@"+esc(t.who):"Unassigned"}</span><span class="${late?"late":""}">${esc(relD(t.due))}</span>${remind}<button class="btn sm" type="button" data-copy="${esc(t.sid)}|${esc(t.id)}">Copy</button></div></li>`;
+}
+function msgFor(list,who){
+  const lines=list.map(t=>`• ${taskLbl(t)} — "${t.stitle}"${t.due?` (due ${relD(t.due).toLowerCase()==="today"?"today":relD(t.due)})`:""}`);
+  return `Hey ${first(who)||"team"}, quick reminder on your content tasks:\n${lines.join("\n")}\n\nTracker: ${location.href.split("#")[0]}#deadlines`;
+}
+async function copy(txt){try{await navigator.clipboard.writeText(txt);toast("Copied. Paste it in WhatsApp or Slack.")}catch(_){toast("Couldn't copy here. Select the text from the task instead.")}}
+
+/* ---------- calendar ---------- */
+const calBusy=new Set();
+async function calendar(sid,tid){
+  const s=all.find(x=>x.id===sid),t=(s?.tasks||[]).find(x=>x.id===tid),m=member(t?.who);
+  if(!s||!t||!m?.email||!t.due||!mcp||calBusy.has(tid))return false;
+  calBusy.add(tid);
+  try{
+    await mcp.callTool(CAL,"create_event",{
+      summary:`Due: ${taskLbl(t)} (${s.title})`.slice(0,250),
+      startTime:`${t.due}T10:00:00`,endTime:`${t.due}T10:30:00`,
+      attendees:[{email:m.email,displayName:m.name}],
+      description:`Task: ${taskLbl(t)}\nScript: ${s.title}\nTab: ${tabName(s.tab)}\nOwner: ${t.who}\n\nScript board: ${location.href.split("#")[0]}#deadlines`,
+      overrideReminders:[{method:"email",minutes:1440},{method:"popup",minutes:60}],
+      notificationLevel:"ALL",availability:"AVAILABILITY_FREE"});
+    await patchTasks(sid,ts=>ts.map(x=>x.id===tid?{...x,remindedAt:Date.now()}:x));
+    return true;
+  }catch(e){
+    const c=e?.code;
+    toast(c==="needs_reauth"?"Reconnect Google Calendar in claude.ai Settings → Connectors, then try again."
+      :c==="server_not_connected"?"Add Google Calendar in claude.ai Settings → Connectors to send reminders."
+      :c==="approval_required"?"Calendar reminders need your OK. Click again and allow it."
+      :c==="not_in_manifest"||c==="blocked_by_policy"?"Calendar isn't allowed for this page. Use Copy to send the reminder instead."
+      :"Couldn't confirm the invite went out. Check your calendar before trying again.");
+    return false;
+  }finally{calBusy.delete(tid)}
+}
+
+/* ---------- library ---------- */
+function renderLib(){
+  const q=libQ.toLowerCase();
+  const list=all.filter(s=>(!libTab||(s.tab||"perf")===libTab)&&(!q||(s.title+" "+(s.script||"")).toLowerCase().includes(q))).sort((a,b)=>TABS.findIndex(t=>t[0]===a.tab)-TABS.findIndex(t=>t[0]===b.tab)||SK.indexOf(a.stage)-SK.indexOf(b.stage));
+  if(!list.find(s=>s.id===libSel))libSel=(list.find(s=>s.script)||list[0])?.id||null;
+  const s=all.find(x=>x.id===libSel);
+  const words=s?.script?s.script.trim().split(/\s+/).length:0;
+  $("#libV").innerHTML=`<div class="tools" style="margin-top:0"><input class="srch" type="search" id="lq" value="${esc(libQ)}" placeholder="Search inside every script" aria-label="Search scripts">
+   <div class="row" style="gap:6px">${[["","All"],...TABS.map(t=>[t[0],t[1].replace("Apoorv's ","")])].map(([k,l])=>`<button class="chip" type="button" data-lt="${k}" aria-pressed="${k===libTab}">${esc(l)}</button>`).join("")}</div></div>
+   <div class="lib" style="margin-top:16px"><div class="ll">${list.map(x=>`<button class="li" type="button" data-ls="${esc(x.id)}" aria-current="${x.id===libSel}"><b>${esc(x.title)}</b><span>${esc(tabName(x.tab).replace("Apoorv's ",""))} · ${esc(stageName(x))}${x.script?"":" · no script yet"}</span></button>`).join("")||`<div class="empty">No scripts match.</div>`}</div>
+   <article class="reader" id="reader">${s?`<div class="row"><span class="tag">${esc(tabName(s.tab))}</span><span class="tag">${esc(stageName(s))}</span>${s.format?`<span class="tag">${esc(s.format)}</span>`:""}${s.owner?`<span class="who">@${esc(s.owner)}</span>`:""}${words?`<span>${words} words · ~${Math.max(1,Math.round(words/150))} min read aloud</span>`:""}</div>
+     <h2>${esc(s.title)}</h2>
+     <div class="rbtns">${s.script?`<button class="btn pri sm" type="button" id="rCopy">Copy script</button>`:""}<button class="btn sm" type="button" data-open="${esc(s.id)}">Edit / assign</button>${okLink(s.link)?`<a class="btn sm" style="display:inline-flex;align-items:center;text-decoration:none" href="${esc(s.link)}" target="_blank" rel="noopener">Open doc ↗</a>`:""}${okDrive(s.drive).map(d=>`<a class="btn sm" style="display:inline-flex;align-items:center;text-decoration:none" href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.label||"Drive")} ↗</a>`).join("")}</div>
+     <div class="txt">${s.script?esc(s.script):`<span style="color:var(--mute)">No script written yet.</span>`}</div>${s.notes?`<div class="nn">${esc(s.notes)}</div>`:""}`:`<div class="empty">Pick a script.</div>`}</article></div>`;
+}
+
+/* ---------- writes ---------- */
+async function write(fn){
+  if(!db)return false;
+  try{await fn();return true}catch(e){
+    if(e&&e.code==="invalid_argument"){canWrite=false;render()}
+    else if(e&&e.code==="unauthorized")toast("Saving needs the team passcode. Try again and enter it.");
+    else if(e&&e.code==="quota_exceeded")toast("The board is full. Delete some posted scripts to add more.");
+    else toast("Couldn't save that change. Try again in a moment.");
+    return false;
+  }
+}
+const stamp=o=>Object.assign(o,{updatedAt:Date.now(),by:me||""});
+const q8={};
+function patchTasks(sid,fn){
+  q8[sid]=(q8[sid]||Promise.resolve()).then(()=>{const s=all.find(x=>x.id===sid);if(!s)return;return write(()=>db.doc("scripts/"+sid).update(stamp({tasks:fn((s.tasks||[]).map(t=>({...t})))})))});
+  return q8[sid];
+}
+function move(id,stage){const s=all.find(x=>x.id===id);if(s&&s.stage!==stage)write(()=>db.doc("scripts/"+id).update(stamp({stage})))}
+
+/* ---------- events ---------- */
+const go=v=>{view=v;const h=[...TABS,...VIEWS].find(x=>x[0]===v)[2];try{history.replaceState(null,"","#"+h)}catch(_){}render()};
+$("#tabs").addEventListener("click",e=>{const b=e.target.closest("[data-t]");if(b)go(b.dataset.t)});
+addEventListener("hashchange",()=>{const t=[...TABS,...VIEWS].find(x=>"#"+x[2]===location.hash);if(t&&t[0]!==view){view=t[0];render()}});
+$("#note").addEventListener("click",e=>{if(e.target.id==="goTasks")go("tasks")});
+$("#q").addEventListener("input",e=>{filt.q=e.target.value;renderBoard()});
+$("#ownF").addEventListener("change",e=>{filt.owner=e.target.value;renderBoard()});
+$("#lateF").addEventListener("click",e=>{filt.late=!filt.late;e.currentTarget.setAttribute("aria-pressed",filt.late);renderBoard()});
+function ownerOpts(){const ns=names();$("#ownF").innerHTML=`<option value="">Everyone</option><option value="_none">Unassigned</option>`+ns.map(n=>`<option value="${esc(n)}">@${esc(n)}</option>`).join("");$("#ownF").value=ns.includes(filt.owner)||filt.owner==="_none"?filt.owner:""}
+
+const board=$("#board");
+board.addEventListener("click",e=>{
+  if(e.target.closest("a"))return;
+  if(e.target.closest("#addSt")){addStage();return}
+  const xs=e.target.closest("[data-xst]");if(xs){removeStage(xs.dataset.xst);return}
+  const c=e.target.closest(".card");if(!c)return;
+  const mv=e.target.closest("[data-mv]");
+  if(mv){const s=all.find(x=>x.id===c.dataset.id);const ST=stagesFor(s.tab||"perf"),i=ST.indexOf(s.stage)+Number(mv.dataset.mv);if(i>=0&&i<ST.length)move(s.id,ST[i]);return}
+  openEd(c.dataset.id);
+});
+board.addEventListener("keydown",e=>{const c=e.target.closest?.(".card");if(c&&e.key==="Enter"&&e.target===c)openEd(c.dataset.id)});
+let dragId=null;
+board.addEventListener("dragstart",e=>{const c=e.target.closest(".card");if(!c||!canWrite)return;dragId=c.dataset.id;c.classList.add("drag");e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",dragId)});
+board.addEventListener("dragend",()=>{dragId=null;board.querySelectorAll(".drag,.over").forEach(x=>x.classList.remove("drag","over"))});
+board.addEventListener("dragover",e=>{const c=e.target.closest(".col");if(!c||!dragId)return;e.preventDefault();board.querySelectorAll(".over").forEach(x=>x!==c&&x.classList.remove("over"));c.classList.add("over")});
+board.addEventListener("drop",e=>{const c=e.target.closest(".col");if(!c||!dragId)return;e.preventDefault();move(dragId,c.dataset.stage)});
+
+const tv=$("#tasksV");
+tv.addEventListener("click",async e=>{
+  const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.who!==undefined){tFilt.who=b.dataset.who;renderTasks();return}
+  if(b.id==="showDone"){tFilt.done=!tFilt.done;renderTasks();return}
+  if(b.dataset.open){openEd(b.dataset.open);return}
+  if(b.dataset.copy){const [sid,tid]=b.dataset.copy.split("|");const s=all.find(x=>x.id===sid),t=s?.tasks?.find(x=>x.id===tid);if(t)copy(msgFor([{...t,stitle:s.title}],t.who));return}
+  if(b.id==="copyMsg"){const l=openTasks().filter(t=>t.who===tFilt.who).sort((a,c)=>(a.due||"9").localeCompare(c.due||"9"));if(!l.length)return toast("Nothing open for them.");copy(msgFor(l,tFilt.who));return}
+  if(b.dataset.cal){b.disabled=true;b.textContent="Sending…";const [sid,tid]=b.dataset.cal.split("|");if(await calendar(sid,tid))toast("Calendar invite sent with an email reminder a day before.");renderTasks();return}
+  if(b.id==="calAll"){b.disabled=true;const l=openTasks().filter(t=>t.who===tFilt.who&&t.due&&!t.remindedAt);let n=0;for(const t of l){if(await calendar(t.sid,t.id))n++;else break}toast(n?`${n} calendar invite${n>1?"s":""} sent to ${first(tFilt.who)}.`:"No new reminders to send.");renderTasks()}
+});
+tv.addEventListener("change",e=>{const c=e.target.closest("[data-tick]");if(!c)return;const [sid,tid]=c.dataset.tick.split("|");patchTasks(sid,ts=>ts.map(t=>t.id===tid?{...t,done:c.checked,doneAt:c.checked?Date.now():null}:t))});
+tv.addEventListener("submit",e=>{
+  if(e.target.id!=="qadd")return;e.preventDefault();
+  const sid=$("#qScript").value,text=$("#qText").value.trim();if(!sid||!text)return;
+  const t={id:uid(),text,who:$("#qWho").value,due:$("#qDue").value,done:false,createdAt:Date.now()};
+  $("#qText").value="";patchTasks(sid,ts=>[...ts,t]).then(()=>toast(`Task added${t.who?" for "+first(t.who):""}.`));
+});
+
+const lv=$("#libV");
+lv.addEventListener("input",e=>{if(e.target.id==="lq"){libQ=e.target.value;const p=e.target.selectionStart;renderLib();const i=$("#lq");i.focus();i.setSelectionRange(p,p)}});
+lv.addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.lt!==undefined){libTab=b.dataset.lt;renderLib();return}
+  if(b.dataset.ls){libSel=b.dataset.ls;renderLib();if(innerWidth<800)$("#reader").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth"});return}
+  if(b.dataset.open){openEd(b.dataset.open);return}
+  if(b.id==="rCopy"){const s=all.find(x=>x.id===libSel);if(s)copy(s.script).then(()=>toast("Script copied."))}
+});
+
+/* ---------- editor ---------- */
+$("#fFmt").innerHTML=`<option value="">—</option>`+FORMATS.map(f=>`<option>${f}</option>`).join("");
+$("#fTab").innerHTML=TABS.map(([k,l])=>`<option value="${k}">${l}</option>`).join("");
+function paintStage(){const t=$("#fTab").value,L=labelsFor(t),ST=stagesFor(t);if(!ST.includes(draftStage))draftStage="draft";$("#fStage").innerHTML=ST.map((k,i)=>`<button type="button" class="chip" data-s="${k}" style="--c:${colK(k)}" aria-pressed="${k===draftStage}"><i></i>${esc(L[i])}</button>`).join("")}
+function paintTasks(){
+  $("#fTasks").innerHTML=draftTasks.map((t,i)=>`<div class="trow" data-i="${i}"><input type="checkbox" data-k="done" ${t.done?"checked":""} aria-label="Done"><select data-k="who" aria-label="Assign to">${opts(t.who,"Unassigned")}</select><input type="date" data-k="due" value="${esc(t.due||"")}" aria-label="Deadline"><button type="button" class="x" data-rm="${i}" aria-label="Remove task">×</button></div>`).join("");
+  $("#ntWho").innerHTML=opts($("#ntWho").value||"","Assign to…");
+}
+$("#fTab").addEventListener("change",paintStage);
+$("#fStage").addEventListener("click",e=>{const b=e.target.closest("[data-s]");if(b){draftStage=b.dataset.s;paintStage()}});
+$("#fTasks").addEventListener("input",e=>{const r=e.target.closest("[data-i]");if(!r)return;const t=draftTasks[+r.dataset.i],k=e.target.dataset.k;t[k]=k==="done"?e.target.checked:e.target.value;if(k==="due"||k==="who")t.remindedAt=null});
+$("#fTasks").addEventListener("click",e=>{const b=e.target.closest("[data-rm]");if(b){draftTasks.splice(+b.dataset.rm,1);paintTasks()}});
+function addDraftTask(){const who=$("#ntWho").value,due=$("#ntDue").value;if(!who&&!due){toast("Pick a person or a deadline first.");return}draftTasks.push({id:uid(),text:"",who,due,done:false,createdAt:Date.now()});$("#ntWho").value="";$("#ntDue").value="";paintTasks();$("#ntWho").focus()}
+$("#ntAdd").addEventListener("click",addDraftTask);
+$("#ntDue").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addDraftTask()}});
+async function openEd(id){
+  const s=id?all.find(x=>x.id===id):null;if(id&&!s)return;
+  editing=id||null;draftStage=s?.stage||"draft";draftTasks=(s?.tasks||[]).map(t=>({...t}));armed=null;
+  $("#edT").textContent=s?"Edit script":"New script";
+  $("#fTitle").value=s?.title||"";$("#fLink").value=s?.link||"";$("#fFmt").value=s?.format||"";
+  $("#fShoot").value=s?.shootDate||"";$("#fDue").value=s?.dueDate||"";$("#fNotes").value=s?.notes||"";$("#fScript").value=s?.script||"";
+  $("#fTab").value=s?.tab||(TABS.find(t=>t[0]===view)?view:"perf");
+  $("#fOwn").innerHTML=opts(s?.owner||"","Unassigned");
+  $("#ntWho").value="";$("#ntDue").value="";
+  draftDrive=(s?.drive||[]).map(d=>({label:d.label||"",url:d.url||""}));paintDrive();$("#fDriveAdd").hidden=!canWrite;
+  $("#fMailL").style.display=canWrite&&db&&db.notify?"flex":"none";
+  $("#fDel").style.visibility=s&&canWrite?"visible":"hidden";$("#fDel").textContent="Delete";
+  $("#fSave").hidden=false;$("#fSave").disabled=!canWrite;$("#fRO").hidden=canWrite;$("#fNewTask").hidden=!canWrite;
+  $("#edMeta").textContent=s?.updatedAt?"Updated "+ago(s.updatedAt)+(s.byName?" by "+s.byName:""):"";
+  paintStage();paintTasks();$("#ed").classList.add("on");$("#fTitle").focus();
+  if(s?.by&&user){try{const p=await user.profiles([s.by]);const n=p?.[s.by]?.name||"";if(n&&editing===id)$("#edMeta").textContent=`Updated ${ago(s.updatedAt)} by ${n}`}catch(_){}}
+}
+let draftDrive=[];
+function paintDrive(){$("#fDrive").innerHTML=draftDrive.map((d,i)=>`<div class="drow" data-d="${i}"><input data-k="label" value="${esc(d.label)}" placeholder="Label, e.g. Raw footage" maxlength="60" aria-label="Link label" ${canWrite?"":"disabled"}><input data-k="url" value="${esc(d.url)}" type="url" placeholder="https://drive.google.com/…" aria-label="Drive link" ${canWrite?"":"disabled"}>${canWrite?`<button type="button" data-drm="${i}" aria-label="Remove link">×</button>`:"<span></span>"}</div>`).join("")||(canWrite?"":`<p class="meta" style="margin:0 0 8px">No Drive links.</p>`)}
+$("#fDrive").addEventListener("input",e=>{const r=e.target.closest("[data-d]");if(r)draftDrive[+r.dataset.d][e.target.dataset.k]=e.target.value});
+$("#fDrive").addEventListener("click",e=>{const b=e.target.closest("[data-drm]");if(b){draftDrive.splice(+b.dataset.drm,1);paintDrive()}});
+$("#fDriveAdd").addEventListener("click",()=>{draftDrive.push({label:"",url:""});paintDrive();const r=$("#fDrive").lastElementChild;r&&r.querySelector('[data-k="url"]').focus()});
+function tagged(prev,o){
+  const hits={},add=(who,line)=>{if(who)(hits[who]=hits[who]||[]).push(line)};
+  if(o.owner&&o.owner!==prev?.owner)add(o.owner,"You're the POC on this script.");
+  for(const t of o.tasks){const pt=(prev?.tasks||[]).find(x=>x.id===t.id);if(t.who&&!t.done&&(!pt||pt.who!==t.who))add(t.who,`${t.text?"Task: "+t.text:"Deadline assigned"}${t.due?` (due ${fmtD(t.due)})`:""}`)}
+  return hits;
+}
+async function emailTagged(hits,o){
+  if(!db||!db.notify)return;
+  const board=location.href.split("#")[0];
+  const abs=u=>{try{return new URL(u,board).href}catch(_){return u}};
+  const sent=[],noMail=[];
+  for(const [who,lines] of Object.entries(hits)){
+    const m=member(who);if(!m?.email){noMail.push(first(who));continue}
+    const text=[`Hi ${first(who)},`,"",`${meName?meName+" tagged you":"You've been tagged"} on "${o.title}" (${tabName(o.tab)}).`,"",...lines.map(l=>"• "+l),
+      o.shootDate?`\nShoot date: ${fmtD(o.shootDate)}`:"",o.dueDate?`Post date: ${fmtD(o.dueDate)}`:"",o.notes?`\nNotes: ${o.notes}`:"",
+      okLink(o.link)?`\nScript doc: ${abs(o.link)}`:"",...okDrive(o.drive).map(d=>`${d.label||"Drive"}: ${d.url}`),"",`Open the board: ${board}#deadlines`].filter(x=>x!=="").join("\n");
+    if(await db.notify(m.email,`You're tagged: ${o.title}`.slice(0,200),text))sent.push(first(who));
+  }
+  if(sent.length)toast(`Emailed ${sent.join(", ")}.`+(noMail.length?` No email saved for ${noMail.join(", ")}.`:""));
+  else if(noMail.length)toast(`Saved. Add an email for ${noMail.join(", ")} under Team to notify them.`);
+}
+const closeEd=()=>{$("#ed").classList.remove("on");editing=null};
+$("#addBtn").addEventListener("click",()=>openEd(null));
+$("#fCancel").addEventListener("click",closeEd);
+$("#ed").addEventListener("click",e=>{if(e.target.id==="ed")closeEd()});
+$("#edF").addEventListener("submit",e=>{
+  e.preventDefault();if(!canWrite||!db)return;
+  if($("#ntWho").value||$("#ntDue").value)addDraftTask();
+  const link=$("#fLink").value.trim();
+  const o=stamp({title:$("#fTitle").value.trim(),link:okLink(link)?link:"",stage:draftStage,tab:$("#fTab").value,script:$("#fScript").value,format:$("#fFmt").value,owner:$("#fOwn").value,drive:draftDrive.map(d=>({label:d.label.trim(),url:d.url.trim()})).filter(d=>/^https:\/\//.test(d.url)).slice(0,20),shootDate:$("#fShoot").value,dueDate:$("#fDue").value,notes:$("#fNotes").value.trim(),tasks:draftTasks.filter(t=>t.text.trim())});
+  if(!o.title)return;
+  const id=editing,prev=id?all.find(x=>x.id===id):null,hits=$("#fMail").checked?tagged(prev,o):{};closeEd();
+  const done=ok=>{if(ok&&Object.keys(hits).length)emailTagged(hits,o)};
+  if(id){const {id:_x,...old}=prev||{};write(()=>db.doc("scripts/"+id).set({...old,...o})).then(done)}
+  else write(()=>db.collection("scripts").add({...o,createdAt:Date.now()})).then(done);
+});
+$("#fDel").addEventListener("click",()=>{
+  if(!editing)return;
+  if(armed!==editing){armed=editing;$("#fDel").textContent="Tap again to delete";setTimeout(()=>{if(armed){armed=null;$("#fDel").textContent="Delete"}},3000);return}
+  const id=editing;closeEd();write(()=>db.doc("scripts/"+id).delete());
+});
+
+/* ---------- team ---------- */
+function paintTeam(){
+  $("#tmL").innerHTML=team.map((m,i)=>`<div class="mrow" data-m="${i}"><input data-k="name" value="${esc(m.name)}" maxlength="60" aria-label="Name" ${canWrite?"":"disabled"}><input data-k="role" value="${esc(m.role||"")}" maxlength="40" list="roles" placeholder="Role" aria-label="Role" ${canWrite?"":"disabled"}><input data-k="email" type="email" value="${esc(m.email||"")}" maxlength="120" placeholder="Email" aria-label="Email" ${canWrite?"":"disabled"}>${canWrite?`<button type="button" data-rm="${i}" aria-label="Remove ${esc(m.name)}">×</button>`:"<span></span>"}</div>`).join("")||`<p class="meta">No one yet.</p>`;
+  $("#tmF").hidden=!canWrite;$("#tmSave").disabled=!canWrite;$("#tmSave").title=canWrite?"":"View only. Ask Apoorv for edit access.";
+}
+let teamT,teamPending=null;
+const saveTeam=t=>write(()=>db.doc("meta/team").set({members:t,stages:extra}));
+function addStage(){
+  if(!canWrite)return;const tab=view;
+  const n=(prompt(`New stage for ${tabName(tab)} (added before "${labels(tab)[5]}")`)||"").trim().slice(0,40);if(!n)return;
+  if(labelsFor(tab).some(l=>l.toLowerCase()===n.toLowerCase()))return toast(n+" is already a stage.");
+  extra={...extra,[tab]:[...(extra[tab]||[]),{k:"c_"+uid(),label:n}]};render();
+  saveTeam(team.map(m=>({...m}))).then(ok=>ok&&toast(`Stage "${n}" added.`));
+}
+function removeStage(k){
+  const tab=view;if(all.some(s=>(s.tab||"perf")===tab&&s.stage===k))return toast("Move the cards out of this stage first.");
+  extra={...extra,[tab]:(extra[tab]||[]).filter(x=>x.k!==k)};render();saveTeam(team.map(m=>({...m})));
+}
+$("#teamBtn").addEventListener("click",()=>{paintTeam();$("#tm").classList.add("on");$("#tmName").focus()});
+$("#tmX").addEventListener("click",()=>$("#tm").classList.remove("on"));
+$("#tm").addEventListener("click",e=>{if(e.target.id==="tm")$("#tm").classList.remove("on");const b=e.target.closest("[data-rm]");if(b){const t=team.filter((_,i)=>i!==Number(b.dataset.rm));team=t;paintTeam();saveTeam(t)}});
+$("#tmL").addEventListener("input",e=>{
+  const r=e.target.closest("[data-m]");if(!r)return;const i=+r.dataset.m,k=e.target.dataset.k;
+  const old=team[i].name;team[i]={...team[i],[k]:e.target.value.trim()};
+  clearTimeout(teamT);teamPending=async()=>{
+    const t=team.map(m=>({...m}));await saveTeam(t);
+    if(k==="name"&&old&&team[i]?.name&&old!==team[i].name){const nw=team[i].name;for(const s of all.filter(s=>s.owner===old||(s.tasks||[]).some(x=>x.who===old))){const {id:_x,...rest}=s;await write(()=>db.doc("scripts/"+s.id).set({...rest,owner:s.owner===old?nw:s.owner,tasks:(s.tasks||[]).map(x=>x.who===old?{...x,who:nw}:x)}))}}
+  };teamT=setTimeout(()=>{const f=teamPending;teamPending=null;f&&f()},700);
+});
+$("#tmSave").addEventListener("click",async e=>{
+  if(!canWrite||!db)return;const b=e.currentTarget;b.disabled=true;
+  clearTimeout(teamT);if(teamPending){const f=teamPending;teamPending=null;await f()}
+  const n=$("#tmName").value.trim().replace(/^@/,"");
+  if(n&&!team.some(m=>m.name.toLowerCase()===n.toLowerCase())){team=[...team,{name:n,role:$("#tmRole").value.trim(),email:$("#tmMail").value.trim()}];$("#tmName").value=$("#tmRole").value=$("#tmMail").value=""}
+  const ok=await saveTeam(team.map(m=>({...m})));b.disabled=false;
+  if(ok){$("#tm").classList.remove("on");ownerOpts();render();toast("Team saved.")}
+});
+$("#tmF").addEventListener("submit",e=>{e.preventDefault();const n=$("#tmName").value.trim().replace(/^@/,"");if(!n)return;if(team.some(m=>m.name.toLowerCase()===n.toLowerCase()))return toast(n+" is already on the team.");const t=[...team,{name:n,role:$("#tmRole").value.trim(),email:$("#tmMail").value.trim()}];team=t;paintTeam();saveTeam(t);$("#tmName").value=$("#tmRole").value=$("#tmMail").value="";$("#tmName").focus()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeEd();$("#tm").classList.remove("on")}});
+
+/* ---------- Neon via Netlify function (/api) ---------- */
+function signOut(){try{localStorage.removeItem(TK)}catch(_){};try{google.accounts.id.disableAutoSelect()}catch(_){};location.reload()}
+$("#outBtn").addEventListener("click",signOut);
+function googleLogin(cfg){return new Promise(resolve=>{
+  $("#gate").hidden=false;
+  $("#gDom").textContent=cfg.domain?`Sign in with your @${cfg.domain} Google account.`:"Sign in with your Google account.";
+  const go=()=>{
+    google.accounts.id.initialize({client_id:cfg.clientId,hd:cfg.domain||undefined,callback:async r=>{
+      $("#gErr").textContent="";
+      const res=await fetch("/api/login",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({credential:r.credential,seedTeam:SEED_TEAM})}).catch(()=>null);
+      const j=res?await res.json().catch(()=>({})):{};
+      if(res&&res.ok&&j.token){try{localStorage.setItem(TK,j.token)}catch(_){};$("#gate").hidden=true;resolve({tok:j.token,who:{email:j.email,name:j.name}})}
+      else $("#gErr").textContent=res&&res.status===403?`${j.email||"That account"} doesn't have access. Use your ${cfg.domain?"@"+cfg.domain:"team"} account.`:"Sign-in failed. Try again.";
+    }});
+    google.accounts.id.renderButton($("#gBtn"),{theme:"filled_blue",size:"large",shape:"pill",text:"signin_with"});
+  };
+  if(window.google?.accounts?.id)go();
+  else{const s=document.createElement("script");s.src="https://accounts.google.com/gsi/client";s.async=true;s.onload=go;s.onerror=()=>{$("#gErr").textContent="Couldn't load Google sign-in. Check your connection and reload."};document.head.appendChild(s)}
+})}
+async function apiDB(){
+  const cfg=await fetch("/api/config",{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null);
+  if(!cfg||typeof cfg.auth!=="boolean")throw new Error("no api");
+  let tok="";try{tok=localStorage.getItem(TK)||""}catch(_){}
+  if(cfg.auth){
+    let who=tok?await fetch("/api/me",{headers:{authorization:"Bearer "+tok},cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null):null;
+    if(!who)({tok,who}=await googleLogin(cfg));
+    me=who.email;meName=who.name||who.email;$("#whoN").textContent=meName;$("#who").hidden=false;
+  }
+  const auth=()=>tok?{authorization:"Bearer "+tok}:{};
+  const get=async()=>{const r=await fetch("/api/state",{cache:"no-store",headers:auth()});if(r.status===401&&cfg.auth)signOut();if(!r.ok)throw new Error("no api");const j=await r.json();if(!Array.isArray(j.scripts))throw new Error("bad api");return j};
+  let st=await get(),last="";
+  const subs={s:[],t:[]},clone=o=>JSON.parse(JSON.stringify(o));
+  const emit=force=>{const k=JSON.stringify(st);if(!force&&k===last)return;last=k;
+    const snapS={docs:st.scripts.map(({id,...d})=>({id,data:()=>clone(d)})),metadata:{fromCache:false}};
+    const snapT={exists:!!st.team,data:()=>st.team?clone(st.team):{}};
+    subs.s.forEach(f=>f(snapS));subs.t.forEach(f=>f(snapT))};
+  const pull=async()=>{try{st=await get();emit()}catch(_){}};
+  const send=(method,path,body)=>fetch("/api/"+path,{method,headers:{"content-type":"application/json","x-edit-key":localStorage.getItem("scriptboard.key")||"",...auth()},body:body===undefined?undefined:JSON.stringify(body)});
+  const req=async(method,path,body)=>{
+    let r=await send(method,path,body);
+    if(r.status===401&&cfg.auth)signOut();
+    if(r.status===401&&!cfg.auth){const k=prompt("Enter the team passcode to save changes");if(k){try{localStorage.setItem("scriptboard.key",k.trim())}catch(_){}r=await send(method,path,body)}}
+    if(!r.ok){const e=new Error("save failed");e.code=r.status===401?"unauthorized":r.status===413?"quota_exceeded":"";throw e}
+    await pull();
+  };
+  setInterval(()=>{if(!document.hidden)pull()},5000);
+  addEventListener("focus",pull);
+  return{
+    notify:async(to,subject,text)=>{
+      let r=await send("POST","notify",{to:[to],subject,text});
+      if(r.status===401&&cfg.auth){signOut();return false}
+      if(r.status===401){const k=prompt("Enter the team passcode to send emails");if(k){try{localStorage.setItem("scriptboard.key",k.trim())}catch(_){}r=await send("POST","notify",{to:[to],subject,text})}}
+      if(r.status===501){toast("Email isn't set up yet. Add BREVO_API_KEY and MAIL_FROM in Netlify.");return false}
+      if(!r.ok){toast("Couldn't send the email. Check the address under Team.");return false}
+      return true;
+    },
+    seed:(scripts,team)=>send("POST","seed",{scripts,team}).then(pull).catch(()=>{}),
+    collection:()=>({onSnapshot:f=>{subs.s.push(f);setTimeout(()=>emit(true));return()=>{}},add:o=>req("POST","scripts",o)}),
+    doc:p=>{const [c,id]=p.split("/");
+      if(c==="meta")return{onSnapshot:f=>{subs.t.push(f);setTimeout(()=>emit(true));return()=>{}},set:o=>req("PUT","team",o)};
+      const u="scripts/"+encodeURIComponent(id);
+      return{update:o=>req("PATCH",u,o),set:o=>req("PUT",u,o),delete:()=>req("DELETE",u)}}
+  };
+}
+
+/* ---------- local fallback (outside claude.ai) ---------- */
+function localDB(){
+  const K="scriptboard.local.v1",clone=o=>JSON.parse(JSON.stringify(o));
+  let st=null;try{st=JSON.parse(localStorage.getItem(K)||"null")}catch(_){}
+  if(!st){st={scripts:{},team:{members:SEED_TEAM}};SEED.forEach(o=>st.scripts[uid()]=clone(o))}
+  else Object.values(st.scripts).forEach(s=>{if(!s.link){const o=SEED.find(x=>x.title===s.title);if(o&&o.link)s.link=o.link}});
+  const subs={s:[],t:[]};
+  const snapS=()=>({docs:Object.entries(st.scripts).map(([id,d])=>({id,data:()=>clone(d)})),metadata:{fromCache:false}});
+  const snapT=()=>({exists:true,data:()=>clone(st.team)});
+  const save=()=>{try{localStorage.setItem(K,JSON.stringify(st))}catch(_){}subs.s.forEach(f=>f(snapS()));subs.t.forEach(f=>f(snapT()))};
+  return{
+    collection:()=>({onSnapshot:f=>{subs.s.push(f);setTimeout(()=>f(snapS()));return()=>{}},add:async o=>{st.scripts[uid()]=clone(o);save()}}),
+    doc:p=>{const [c,id]=p.split("/");
+      if(c==="meta")return{onSnapshot:f=>{subs.t.push(f);setTimeout(()=>f(snapT()));return()=>{}},set:async o=>{st.team=clone(o);save()}};
+      return{update:async o=>{if(st.scripts[id]){st.scripts[id]={...st.scripts[id],...clone(o)};save()}},set:async o=>{st.scripts[id]=clone(o);save()},delete:async()=>{delete st.scripts[id];save()}}}
+  };
+}
+
+render();ownerOpts();
+(async()=>{
+  try{user=await claude.use("user")}catch(_){}
+  if(user){try{me=await user.id()}catch(_){};try{const c=await user.can("data.write");if(c===false)canWrite=false}catch(_){}}
+  try{db=await claude.use("db")}catch(_){}
+  if(!db){try{db=await apiDB()}catch(_){db=null}}
+  if(!db){db=localDB();local=true}
+  $("#addBtn").hidden=!canWrite;
+  const t=setTimeout(()=>{if(!loaded)note("Can't reach the board yet. It will appear when the connection returns.")},10000);
+  db.collection("scripts").onSnapshot(s=>{
+    all=s.docs.map(d=>({...d.data(),id:d.id}));
+    if(!s.metadata.fromCache){loaded=true;clearTimeout(t);
+      if(!local&&!s.docs.length&&canWrite&&!seeded){seeded=true;if(db.seed)db.seed(SEED,SEED_TEAM);else SEED.forEach(o=>write(()=>db.collection("scripts").add({...o,by:me||""})))}}
+    ownerOpts();render();
+  },()=>{loaded=true;clearTimeout(t);note("The board stopped syncing. Reload the page to reconnect.");});
+  db.doc("meta/team").onSnapshot(s=>{
+    if(!s.exists&&!local&&canWrite&&!teamSeeded){teamSeeded=true;saveTeam(SEED_TEAM)}
+    const d=s.exists?s.data():{};
+    extra=d.stages&&typeof d.stages==="object"?Object.fromEntries(Object.entries(d.stages).map(([t,a])=>[t,(Array.isArray(a)?a:[]).filter(x=>x&&typeof x.k==="string"&&x.label).map(x=>({k:x.k,label:String(x.label).slice(0,40)}))])):{};
+    if(loaded&&view!=="tasks"&&view!=="lib")render();
+    team=Array.isArray(d.members)?d.members.map(m=>({name:String(m.name||""),role:String(m.role||""),email:String(m.email||"")})).filter(m=>m.name):Array.isArray(d.names)?d.names.map(n=>({name:String(n),role:"",email:""})):[];
+    ownerOpts();if($("#tm").classList.contains("on")&&!$("#tm").contains(document.activeElement))paintTeam();if(view==="tasks")renderTasks();
+  },()=>{});
+  try{mcp=await claude.use("mcp")}catch(_){}
+  if(mcp&&view==="tasks")renderTasks();
+})();
+}
+</script>
+</body>
+</html>

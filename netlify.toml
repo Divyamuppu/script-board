@@ -1,0 +1,7 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[build.environment]
+  # These values are public (shown in the page or the README), so don't flag them.
+  SECRETS_SCAN_OMIT_KEYS = "ALLOWED_DOMAIN,ALLOWED_EMAILS,GOOGLE_CLIENT_ID,MAIL_FROM"
